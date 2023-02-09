@@ -5,6 +5,8 @@ VisualStudioVersion = 17.5.33103.201
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Taiwan-news-crawlers", "Taiwan-news-crawlers.csproj", "{B318B39D-DAD3-482A-87BF-DC0BC2E118FE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "NewsTest", "..\NewsTest\NewsTest.csproj", "{CD135EC3-0774-4074-A26A-8416CE4BA5B0}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -15,6 +17,10 @@ Global
 		{B318B39D-DAD3-482A-87BF-DC0BC2E118FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B318B39D-DAD3-482A-87BF-DC0BC2E118FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B318B39D-DAD3-482A-87BF-DC0BC2E118FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CD135EC3-0774-4074-A26A-8416CE4BA5B0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CD135EC3-0774-4074-A26A-8416CE4BA5B0}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CD135EC3-0774-4074-A26A-8416CE4BA5B0}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CD135EC3-0774-4074-A26A-8416CE4BA5B0}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
