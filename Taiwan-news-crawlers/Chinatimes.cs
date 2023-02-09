@@ -36,7 +36,8 @@ namespace Taiwan_news_crawlers
 				var OneNewsHtml = GetHttpHtml.GetHtml(_news.Url);
 				var Bodydocument = context.OpenAsync(res => res.Content(OneNewsHtml)).Result;
 				_news.Author = Bodydocument.QuerySelector(".meta-info .author").TextContent.Trim();
-				_news.ContentBody = Bodydocument.QuerySelector("div.article-body").InnerHtml.Trim();
+				_news.ContentBody = Bodydocument.QuerySelector("div.article-body").TextContent.Trim();
+				_news.ContentBodyHtml= Bodydocument.QuerySelector("div.article-body").InnerHtml.Trim();
 				_allnews.Add(_news);
 			}
 			return _allnews;
