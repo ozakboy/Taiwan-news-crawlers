@@ -14,7 +14,7 @@ namespace Taiwan_news_crawlers
 	public class Chinatimes
 	{
 		private static readonly string DefultUrl = "https://www.chinatimes.com";
-		public List<News> GetNews(NewsType newsType)
+		public List<News> GetNews(ChinatimesNewsType newsType)
 		{
 			string Url = $"https://www.chinatimes.com/realtimenews/{newsType.GetHashCode()}/?chdtv";
 			string Html = GetHttpHtml.GetHtml(Url);
@@ -30,7 +30,7 @@ namespace Taiwan_news_crawlers
 					Title = news.QuerySelector(".title").TextContent.Trim(),
 					Url = DefultUrl + news.QuerySelector("a").GetAttribute("href") ?? string.Empty,
 					UrlToImage = news.QuerySelector("div a img").GetAttribute("src") ?? string.Empty,
-					PublishedAt = news.QuerySelector("time").GetAttribute("datetime") ?? string.Empty,
+					PublishedAt = Convert.ToDateTime(news.QuerySelector("time").GetAttribute("datetime") ?? string.Empty ),
 					Description = news.QuerySelector("p.intro").TextContent.Trim()
 				};
 				var OneNewsHtml = GetHttpHtml.GetHtml(_news.Url);
@@ -43,7 +43,7 @@ namespace Taiwan_news_crawlers
 			return _allnews;
 		}
 
-		public enum NewsType
+		public enum ChinatimesNewsType
 		{
 			/// <summary>
 			/// 政治
