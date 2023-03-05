@@ -10,18 +10,17 @@
 
 ## 要求
 
-ASP.net Core 6
+.net Core 6
 
 ## 使用到的其他套件
 
-Newtonsoft.Json
-
-AngleSharp
+1. Newtonsoft.Json
+2. AngleSharp
 
 ## 目前支援爬蟲的新聞網站
 
-1.中時新聞網
-2.鉅亨網
-3.自由時報網址
+1. 中時新聞網
+2. 鉅亨網
+3. 自由時報網址
 
 
