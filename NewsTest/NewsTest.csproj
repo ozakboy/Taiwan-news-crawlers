@@ -8,6 +8,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="ozakboy.NLOG" Version="1.1.1" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Taiwan-news-crawlers\Taiwan-news-crawlers.csproj" />
   </ItemGroup>
 
