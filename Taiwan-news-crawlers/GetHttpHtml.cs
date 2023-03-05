@@ -16,20 +16,20 @@ namespace Taiwan_news_crawlers
 		/// <returns></returns>
 		public static async Task <string> GetHtml(string Url) 
 		{
-			HttpClient httpClient = new HttpClient();
-
-			//發送請求並取得回應內容
-			var responseMessage = httpClient.GetAsync(Url).Result;
-
-			//讀取Content內容
-			if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+			using (HttpClient httpClient = new HttpClient())
 			{
-				var Result = await responseMessage.Content.ReadAsStringAsync();
-				return Result;
-            }				
-			else
-				return string.Empty;
-		}
+				//發送請求並取得回應內容
+				var responseMessage = httpClient.GetAsync(Url).Result;
+				//讀取Content內容
+				if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+				{
+					var Result = await responseMessage.Content.ReadAsStringAsync();
+					return Result;
+				}
+				else
+					return string.Empty;
+			}
+        }
 
 		/// <summary>
 		/// 取得API 架構用
@@ -38,22 +38,23 @@ namespace Taiwan_news_crawlers
 		/// <param name="Url"></param>
 		/// <returns></returns>
 		public static async Task<T?> GetApiJson<T>(string Url)
-		{
-			T? deserializeObject = default;
-            HttpClient httpClient = new HttpClient();
-
-            //發送請求並取得回應內容
-            var responseMessage = httpClient.GetAsync(Url).Result;
-
-			//讀取Content內容
-			if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+		{			
+			using (HttpClient httpClient = new HttpClient())
 			{
-				var Result = await responseMessage.Content.ReadAsStringAsync();
-				deserializeObject = JsonConvert.DeserializeObject<T>(Result);
-				return deserializeObject;
+                T? deserializeObject = default;
+                //發送請求並取得回應內容
+                var responseMessage = httpClient.GetAsync(Url).Result;
+
+				//讀取Content內容
+				if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+				{
+					var Result = await responseMessage.Content.ReadAsStringAsync();
+					deserializeObject = JsonConvert.DeserializeObject<T>(Result);
+					return deserializeObject;
+				}
+				else
+					return deserializeObject;
 			}
-			else
-				return deserializeObject;
         }
 	}
 }

@@ -1,11 +1,14 @@
 ﻿using Taiwan_news_crawlers;
 using ozakboy.NLOG;
 
-var i = 1;
+do
+{
 
-LOG.Info_Log($"=========Chinatimes============");
-Chinatimes _chinatimes = new Chinatimes();
-List<ChinatimesNewsType> _chinatimesNewsTypes = new List<ChinatimesNewsType>()
+    var i = 1;
+
+    LOG.Info_Log($"=========Chinatimes============");
+    Chinatimes _chinatimes = new Chinatimes();
+    List<ChinatimesNewsType> _chinatimesNewsTypes = new List<ChinatimesNewsType>()
 {
     ChinatimesNewsType.Politics,
     ChinatimesNewsType.Life,
@@ -19,27 +22,27 @@ List<ChinatimesNewsType> _chinatimesNewsTypes = new List<ChinatimesNewsType>()
     ChinatimesNewsType.Military,
     ChinatimesNewsType.Healthy,
 };
-foreach (var item in _chinatimesNewsTypes)
-{
-    var list = await _chinatimes.GetNews(item);
-    LOG.Info_Log($"分類:{item}");
-    foreach (var c in list)
+    foreach (var item in _chinatimesNewsTypes)
     {
-        LOG.Info_Log($"{i}.{c.Title}");
-        i++;
+        var list = await _chinatimes.GetNews(item);
+        LOG.Info_Log($"分類:{item}");
+        foreach (var c in list)
+        {
+            LOG.Info_Log($"{i}.{c.Title}");
+            i++;
+        }
+        i = 1;
     }
+
+    LOG.Info_Log($"=========Chinatimes============");
+
     i = 1;
-}
 
-LOG.Info_Log($"=========Chinatimes============");
+    LOG.Info_Log($"=========Newsltn============");
 
-i = 1;
+    Newsltn _newsltn = new Newsltn();
 
-LOG.Info_Log($"=========Newsltn============");
-
-Newsltn _newsltn = new Newsltn();
-
-List<NewsltnNewsType> _newsltnNewsTypes = new List<NewsltnNewsType>()
+    List<NewsltnNewsType> _newsltnNewsTypes = new List<NewsltnNewsType>()
 {
     NewsltnNewsType.politics,
     NewsltnNewsType.society,
@@ -49,24 +52,24 @@ List<NewsltnNewsType> _newsltnNewsTypes = new List<NewsltnNewsType>()
     NewsltnNewsType.novelty,
     NewsltnNewsType.strategy,
 };
-foreach (var item in _newsltnNewsTypes)
-{
-    var list = await _newsltn.GetNews(item);
-    LOG.Info_Log($"分類:{item}");
-    foreach (var c in list)
+    foreach (var item in _newsltnNewsTypes)
     {
-        LOG.Info_Log($"{i}.{c.Title}");
-        i++;
+        var list = await _newsltn.GetNews(item);
+        LOG.Info_Log($"分類:{item}");
+        foreach (var c in list)
+        {
+            LOG.Info_Log($"{i}.{c.Title}");
+            i++;
+        }
+        i = 1;
     }
-    i = 1;
-}
 
-LOG.Info_Log($"=========Newsltn============");
+    LOG.Info_Log($"=========Newsltn============");
 
 
-LOG.Info_Log($"=========Cnyes============");
-Cnyes _cnyes = new Cnyes();
-List<CnyesNewsType> CnyesNewsTypeAll = new List<CnyesNewsType>()
+    LOG.Info_Log($"=========Cnyes============");
+    Cnyes _cnyes = new Cnyes();
+    List<CnyesNewsType> CnyesNewsTypeAll = new List<CnyesNewsType>()
 {
     CnyesNewsType.tw_stock ,
     CnyesNewsType.tw_quo ,
@@ -89,18 +92,21 @@ List<CnyesNewsType> CnyesNewsTypeAll = new List<CnyesNewsType>()
     CnyesNewsType.wd_macro ,
 };
 
-i = 1;
-foreach (var _CnyesNewsType in CnyesNewsTypeAll)
-{
-    LOG.Info_Log($"分類:{_CnyesNewsType}");
-    var data = await _cnyes.GetNews(_CnyesNewsType);
-  
-    foreach (var item in data)
-    {
-        LOG.Info_Log($"{i}.{item.Title}");
-        i++;
-    }
     i = 1;
-}
+    foreach (var _CnyesNewsType in CnyesNewsTypeAll)
+    {
+        LOG.Info_Log($"分類:{_CnyesNewsType}");
+        var data = await _cnyes.GetNews(_CnyesNewsType);
 
-LOG.Info_Log($"=========Cnyes============");
+        foreach (var item in data)
+        {
+            LOG.Info_Log($"{i}.{item.Title}");
+            i++;
+        }
+        i = 1;
+    }
+
+    LOG.Info_Log($"=========Cnyes============");
+
+    System.Threading.Thread.Sleep(60 * 1000);
+} while (true);
