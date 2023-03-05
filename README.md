@@ -1,6 +1,12 @@
 # Taiwan-news-crawlers
 台溫新聞爬蟲
 
+## 簡介
+
+利用 C# .net core 寫的的新聞爬蟲函式庫 
+
+自用、長期維護、緩慢更新
+
 
 ## 要求
 
@@ -11,3 +17,11 @@ ASP.net Core 6
 Newtonsoft.Json
 
 AngleSharp
+
+## 目前支援爬蟲的新聞網站
+
+1.中時新聞網
+2.鉅亨網
+3.自由時報網址
+
+
