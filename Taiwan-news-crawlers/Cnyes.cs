@@ -146,6 +146,8 @@ namespace Taiwan_news_crawlers
 
             #endregion
 
+            #region 其他
+
             /// <summary>
             /// 外匯 全部
             /// </summary>
@@ -160,6 +162,13 @@ namespace Taiwan_news_crawlers
 			/// 房產 全部
 			/// </summary>
             cnyeshouse,
+
+			/// <summary>
+			/// 消費 全部
+			/// </summary>
+            spending,
+
+            #endregion
 
         }
 
