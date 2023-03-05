@@ -1,5 +1,5 @@
 # Taiwan-news-crawlers
-台溫新聞爬蟲
+台灣新聞爬蟲
 
 ## 簡介
 
