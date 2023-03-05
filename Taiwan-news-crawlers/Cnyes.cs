@@ -13,33 +13,37 @@ namespace Taiwan_news_crawlers
 	public class Cnyes
 	{
 		public static readonly string CnyesUrl = "https://news.cnyes.com/";
+		public static readonly string CnyesApiUrl = "https://api.cnyes.com/";
 
 		public List<News> GetNews(CnyesNewsType _cnyesNewsType)
 		{
 			List<News> list = new List<News>();
-			var StartNow = GetIntTIme(DateTime.Now);
-			var EndNow = GetIntTIme(DateTime.Now.AddDays(-3));
 
-			var ApiUrl = $"{CnyesUrl}media/api/v1/newslist/category/{_cnyesNewsType.GetTypeCode()}?startAt={StartNow}&endAt={EndNow}&limit=30";
+            var StartNow = GetIntTIme(DateTime.Now.AddDays(-3));
+			var EndNow = GetIntTIme(DateTime.Now);
+
+			var ApiUrl = $"{CnyesApiUrl}media/api/v1/newslist/category/{_cnyesNewsType}?startAt={StartNow}&endAt={EndNow}&limit=30";
 
             var CnyesApiRep = GetHttpClient.GetApiJson<VCnyesApiRep>(ApiUrl);
 			if (CnyesApiRep is null)
 				return list;
-			else if (CnyesApiRep.data is null)
+            else if (CnyesApiRep.items is null)
+                return list;
+            else if (CnyesApiRep.items.data is null)
 				return list;
 
-            foreach (var OneNews in CnyesApiRep.data)
+            foreach (var OneNews in CnyesApiRep.items.data)
 			{
 				var CreateNews = new News()
 				{
 					Title = OneNews.title,
 					Description = OneNews.summary,
-					Author = OneNews.categoryName,
+					Author = OneNews.source ?? string.Empty,
 					ContentBody = OneNews.content,
 					ContentBodyHtml = OneNews.content,
 					PublishedAt = IntTimeToDateTIme(OneNews.publishAt) ,
 					Url = $"{CnyesUrl}news/id/{OneNews.newsId}",
-					UrlToImage = OneNews.coverSrc.l.src
+					UrlToImage = OneNews.coverSrc?.l.src ?? string.Empty
                 };
 				list.Add(CreateNews);
 			}
@@ -115,7 +119,14 @@ namespace Taiwan_news_crawlers
         /// <returns></returns>
         private long GetIntTIme(DateTime _dateTime)
         {
-            return _dateTime.Subtract(new DateTime(1970, 1, 1, 0, 0, 0)).Ticks * 1000000;
+           // return _dateTime.Subtract(new DateTime(1970, 1, 1, 0, 0, 0)).Ticks / 10000000 ;
+
+            // 將 datetime 轉換成 UTC 時間
+            DateTime utcDatetime = _dateTime.ToUniversalTime();
+
+            // 計算 UTC datetime 距離 1970 年 1 月 1 日 00:00:00 UTC 的秒數
+            long unixTimestamp = (long)(utcDatetime.Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc))).TotalSeconds;
+			return unixTimestamp;
         }
 
 		/// <summary>
@@ -125,8 +136,8 @@ namespace Taiwan_news_crawlers
 		/// <returns></returns>
 		private DateTime IntTimeToDateTIme(long IntTIme)
 		{
-			return new DateTime(IntTIme* 1000000);
-		}
+            return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(IntTIme);
+        }
 
         #endregion
 
@@ -134,15 +145,32 @@ namespace Taiwan_news_crawlers
 
         private class VCnyesApiRep
 		{	
+			public VCnyesApiData items { get; set; }
 
-			/// <summary>
-			/// 新聞資料
-			/// </summary>
-			public List<VCnyesNews> data { get; set; }
+			public string message { get; set; }
+			public int statusCode { get; set; }
+
+
 
         }
 
-		private class VCnyesNews
+		private class VCnyesApiData
+		{
+            public int current_page { get; set; }
+            public int from { get; set; }
+            public int last_page { get; set; }
+            public int per_page { get; set; }
+            public int to { get; set; }
+            public int total { get; set; }
+            /// <summary>
+            /// 新聞資料
+            /// </summary>
+            public List<VCnyesNews> data { get; set; }
+        }
+
+
+
+        private class VCnyesNews
 		{
 
 			/// <summary>
@@ -160,7 +188,7 @@ namespace Taiwan_news_crawlers
 			/// <summary>
 			///  圖片連結
 			/// </summary>
-			public VCnyesNewsCoverSrc coverSrc { get; set; }
+			public VCnyesNewsCoverSrc? coverSrc { get; set; }
 			/// <summary>
 			/// 分類
 			/// </summary>
@@ -175,6 +203,8 @@ namespace Taiwan_news_crawlers
 			/// 新聞ID
 			/// </summary>
 			public long newsId { get; set; }
+
+			public string source { get; set; }
 
         }
 
