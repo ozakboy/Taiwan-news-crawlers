@@ -17,7 +17,7 @@ namespace Taiwan_news_crawlers
 		public List<News> GetNews(ChinatimesNewsType newsType)
 		{
 			string Url = $"https://www.chinatimes.com/realtimenews/{newsType.GetHashCode()}/?chdtv";
-			string Html = GetHttpHtml.GetHtml(Url);
+			string Html = GetHttpClient.GetHtml(Url);
 			var config = Configuration.Default;
 			var context = BrowsingContext.New(config);
 			var document = context.OpenAsync(res => res.Content(Html)).Result;
@@ -33,7 +33,7 @@ namespace Taiwan_news_crawlers
 					PublishedAt = Convert.ToDateTime(news.QuerySelector("time").GetAttribute("datetime") ?? string.Empty ),
 					Description = news.QuerySelector("p.intro").TextContent.Trim()
 				};
-				var OneNewsHtml = GetHttpHtml.GetHtml(_news.Url);
+				var OneNewsHtml = GetHttpClient.GetHtml(_news.Url);
 				var Bodydocument = context.OpenAsync(res => res.Content(OneNewsHtml)).Result;
 				_news.Author = Bodydocument.QuerySelector(".meta-info .author").TextContent.Trim();
 				_news.ContentBody = Bodydocument.QuerySelector("div.article-body").TextContent.Trim();

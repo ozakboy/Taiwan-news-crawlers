@@ -30,7 +30,7 @@ namespace Taiwan_news_crawlers
 				Url = "https://ec.ltn.com.tw/list/strategy";
 			else
 				Url = $"https://news.ltn.com.tw/list/breakingnews/{type}";
-			string Html = GetHttpHtml.GetHtml(Url);
+			string Html = GetHttpClient.GetHtml(Url);
 			var config = Configuration.Default;
 			var context = BrowsingContext.New(config);
 			var document = context.OpenAsync(res => res.Content(Html)).Result;
@@ -48,7 +48,7 @@ namespace Taiwan_news_crawlers
 						UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
 						PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml)
 					};
-				    Html = GetHttpHtml.GetHtml(_news.Url);
+				    Html = GetHttpClient.GetHtml(_news.Url);
 					var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
 					_news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").InnerHtml.Trim(), "");
 					_news.ContentBody = Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").TextContent.Trim();
@@ -66,7 +66,7 @@ namespace Taiwan_news_crawlers
 						UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
 						PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml)
 					};
-					Html = GetHttpHtml.GetHtml(_news.Url);
+					Html = GetHttpClient.GetHtml(_news.Url);
 					var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
 					_news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").InnerHtml.Trim(), "");
 					_news.ContentBody = Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").TextContent.Trim();
@@ -87,7 +87,7 @@ namespace Taiwan_news_crawlers
 						Url = News.QuerySelector("a")?.GetAttribute("href") ?? string.Empty,
 						UrlToImage = News.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
 					};
-				    Html = GetHttpHtml.GetHtml(_news.Url);
+				    Html = GetHttpClient.GetHtml(_news.Url);
 					var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
 					_news.PublishedAt = Convert.ToDateTime(Bodydocument.QuerySelector(".time")?.TextContent ?? string.Empty );
 					_news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".text.boxTitle.boxText").InnerHtml.Trim() , "");
