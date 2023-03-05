@@ -58,9 +58,12 @@ namespace Taiwan_news_crawlers
 		/// </summary>
 		public enum CnyesNewsType
 		{
-			/// <summary>
-			/// 台股全部
-			/// </summary>
+
+            #region 台股
+
+            /// <summary>
+            /// 台股全部
+            /// </summary>
             tw_stock,
 			/// <summary>
 			/// 台股盤勢
@@ -75,9 +78,13 @@ namespace Taiwan_news_crawlers
 			/// </summary>
             tw_stock_news,
 
-			/// <summary>
-			/// 期貨全部
-			/// </summary>
+            #endregion
+
+            #region 期貨
+
+            /// <summary>
+            /// 期貨全部
+            /// </summary>
             future,
 			/// <summary>
 			/// 期貨指數
@@ -106,27 +113,73 @@ namespace Taiwan_news_crawlers
 			/// <summary>
 			/// 期貨黃金
 			/// </summary>
-            precious_metals
+            precious_metals,
+
+            #endregion
+
+            #region 國際股
+
+			/// <summary>
+			/// 國際股 全部
+			/// </summary>
+            wd_stock,
+
+			/// <summary>
+			/// 美股
+			/// </summary>
+            us_stock,
+
+			/// <summary>
+			/// 美股雷達
+			/// </summary>
+            us_stock_live,
+
+			/// <summary>
+			/// 歐亞股
+			/// </summary>
+            eu_asia_stock,
+
+			/// <summary>
+			/// 國際政經
+			/// </summary>
+            wd_macro,
+
+            #endregion
+
+            /// <summary>
+            /// 外匯 全部
+            /// </summary>
+            forex,
+
+			/// <summary>
+			/// 區塊鏈 全部
+			/// </summary>
+            bc,
+
+			/// <summary>
+			/// 房產 全部
+			/// </summary>
+            cnyeshouse,
 
         }
 
         #region 轉時間格式
 
         /// <summary>
-        /// 取得鉅亨時間格式
+        ///  取得鉅亨時間格式
         /// </summary>
         /// <param name="_dateTime"></param>
         /// <returns></returns>
         private long GetIntTIme(DateTime _dateTime)
         {
-           // return _dateTime.Subtract(new DateTime(1970, 1, 1, 0, 0, 0)).Ticks / 10000000 ;
 
-            // 將 datetime 轉換成 UTC 時間
+			// 將 datetime 轉換成 UTC 時間
             DateTime utcDatetime = _dateTime.ToUniversalTime();
 
             // 計算 UTC datetime 距離 1970 年 1 月 1 日 00:00:00 UTC 的秒數
             long unixTimestamp = (long)(utcDatetime.Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc))).TotalSeconds;
 			return unixTimestamp;
+
         }
 
 		/// <summary>
