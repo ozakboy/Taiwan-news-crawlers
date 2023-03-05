@@ -14,7 +14,7 @@ namespace Taiwan_news_crawlers
 		/// </summary>
 		/// <param name="Url"></param>
 		/// <returns></returns>
-		public static string GetHtml(string Url) 
+		public static async Task <string> GetHtml(string Url) 
 		{
 			HttpClient httpClient = new HttpClient();
 
@@ -23,7 +23,10 @@ namespace Taiwan_news_crawlers
 
 			//讀取Content內容
 			if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
-				return responseMessage.Content.ReadAsStringAsync().Result;
+			{
+				var Result = await responseMessage.Content.ReadAsStringAsync();
+				return Result;
+            }				
 			else
 				return string.Empty;
 		}
@@ -34,7 +37,7 @@ namespace Taiwan_news_crawlers
 		/// <typeparam name="T"></typeparam>
 		/// <param name="Url"></param>
 		/// <returns></returns>
-		public static T? GetApiJson<T>(string Url)
+		public static async Task<T?> GetApiJson<T>(string Url)
 		{
 			T? deserializeObject = default;
             HttpClient httpClient = new HttpClient();
@@ -45,7 +48,7 @@ namespace Taiwan_news_crawlers
 			//讀取Content內容
 			if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
 			{
-				var Result = responseMessage.Content.ReadAsStringAsync().Result;
+				var Result = await responseMessage.Content.ReadAsStringAsync();
 				deserializeObject = JsonConvert.DeserializeObject<T>(Result);
 				return deserializeObject;
 			}

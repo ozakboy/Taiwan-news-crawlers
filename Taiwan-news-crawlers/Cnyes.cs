@@ -15,7 +15,7 @@ namespace Taiwan_news_crawlers
 		public static readonly string CnyesUrl = "https://news.cnyes.com/";
 		public static readonly string CnyesApiUrl = "https://api.cnyes.com/";
 
-		public List<News> GetNews(CnyesNewsType _cnyesNewsType)
+		public async Task<List<News>> GetNews(CnyesNewsType _cnyesNewsType)
 		{
 			List<News> list = new List<News>();
 
@@ -24,7 +24,7 @@ namespace Taiwan_news_crawlers
 
 			var ApiUrl = $"{CnyesApiUrl}media/api/v1/newslist/category/{_cnyesNewsType}?startAt={StartNow}&endAt={EndNow}&limit=30";
 
-            var CnyesApiRep = GetHttpClient.GetApiJson<VCnyesApiRep>(ApiUrl);
+            var CnyesApiRep = await GetHttpClient.GetApiJson<VCnyesApiRep>(ApiUrl);
 			if (CnyesApiRep is null)
 				return list;
             else if (CnyesApiRep.items is null)
@@ -53,124 +53,7 @@ namespace Taiwan_news_crawlers
 
         }
 
-		/// <summary>
-		/// 鉅亨網 新聞分類
-		/// </summary>
-		public enum CnyesNewsType
-		{
-
-            #region 台股
-
-            /// <summary>
-            /// 台股全部
-            /// </summary>
-            tw_stock,
-			/// <summary>
-			/// 台股盤勢
-			/// </summary>
-            tw_quo,
-			/// <summary>
-			/// 台灣政經
-			/// </summary>
-            tw_macro,
-			/// <summary>
-			/// 台股新聞
-			/// </summary>
-            tw_stock_news,
-
-            #endregion
-
-            #region 期貨
-
-            /// <summary>
-            /// 期貨全部
-            /// </summary>
-            future,
-			/// <summary>
-			/// 期貨指數
-			/// </summary>
-            index_futures,
-			/// <summary>
-			/// 期貨股票
-			/// </summary>
-            stock_futures,
-
-			/// <summary>
-			/// 期貨能源
-			/// </summary>
-            energy,
-
-            /// <summary>
-            /// 期貨債券
-            /// </summary>
-            futu_bond,
-
-            /// <summary>
-            /// 期貨農作
-            /// </summary>
-            futu_produce,
-
-			/// <summary>
-			/// 期貨黃金
-			/// </summary>
-            precious_metals,
-
-            #endregion
-
-            #region 國際股
-
-			/// <summary>
-			/// 國際股 全部
-			/// </summary>
-            wd_stock,
-
-			/// <summary>
-			/// 美股
-			/// </summary>
-            us_stock,
-
-			/// <summary>
-			/// 美股雷達
-			/// </summary>
-            us_stock_live,
-
-			/// <summary>
-			/// 歐亞股
-			/// </summary>
-            eu_asia_stock,
-
-			/// <summary>
-			/// 國際政經
-			/// </summary>
-            wd_macro,
-
-            #endregion
-
-            #region 其他
-
-            /// <summary>
-            /// 外匯 全部
-            /// </summary>
-            forex,
-
-			/// <summary>
-			/// 區塊鏈 全部
-			/// </summary>
-            bc,
-
-			/// <summary>
-			/// 房產 全部
-			/// </summary>
-            cnyeshouse,
-
-			/// <summary>
-			/// 消費 全部
-			/// </summary>
-            spending,
-
-            #endregion
-
-        }
+	
 
         #region 轉時間格式
 
@@ -290,6 +173,125 @@ namespace Taiwan_news_crawlers
         }
 
         #endregion
+    }
+
+    /// <summary>
+    /// 鉅亨網 新聞分類
+    /// </summary>
+    public enum CnyesNewsType
+    {
+
+        #region 台股
+
+        /// <summary>
+        /// 台股全部
+        /// </summary>
+        tw_stock,
+        /// <summary>
+        /// 台股盤勢
+        /// </summary>
+        tw_quo,
+        /// <summary>
+        /// 台灣政經
+        /// </summary>
+        tw_macro,
+        /// <summary>
+        /// 台股新聞
+        /// </summary>
+        tw_stock_news,
+
+        #endregion
+
+        #region 期貨
+
+        /// <summary>
+        /// 期貨全部
+        /// </summary>
+        future,
+        /// <summary>
+        /// 期貨指數
+        /// </summary>
+        index_futures,
+        /// <summary>
+        /// 期貨股票
+        /// </summary>
+        stock_futures,
+
+        /// <summary>
+        /// 期貨能源
+        /// </summary>
+        energy,
+
+        /// <summary>
+        /// 期貨債券
+        /// </summary>
+        futu_bond,
+
+        /// <summary>
+        /// 期貨農作
+        /// </summary>
+        futu_produce,
+
+        /// <summary>
+        /// 期貨黃金
+        /// </summary>
+        precious_metals,
+
+        #endregion
+
+        #region 國際股
+
+        /// <summary>
+        /// 國際股 全部
+        /// </summary>
+        wd_stock,
+
+        /// <summary>
+        /// 美股
+        /// </summary>
+        us_stock,
+
+        /// <summary>
+        /// 美股雷達
+        /// </summary>
+        us_stock_live,
+
+        /// <summary>
+        /// 歐亞股
+        /// </summary>
+        eu_asia_stock,
+
+        /// <summary>
+        /// 國際政經
+        /// </summary>
+        wd_macro,
+
+        #endregion
+
+        #region 其他
+
+        /// <summary>
+        /// 外匯 全部
+        /// </summary>
+        forex,
+
+        /// <summary>
+        /// 區塊鏈 全部
+        /// </summary>
+        bc,
+
+        /// <summary>
+        /// 房產 全部
+        /// </summary>
+        cnyeshouse,
+
+        /// <summary>
+        /// 消費 全部
+        /// </summary>
+        spending,
+
+        #endregion
+
     }
 
 }
