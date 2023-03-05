@@ -26,7 +26,7 @@ namespace Taiwan_news_crawlers
 		public async Task<List<News>> GetNews(NewsltnNewsType type)
 		{
 			string Url = string.Empty;
-			if (type == NewsltnNewsType.society)
+			if (type == NewsltnNewsType.strategy)
 				Url = "https://ec.ltn.com.tw/list/strategy";
 			else
 				Url = $"https://news.ltn.com.tw/list/breakingnews/{type}";
@@ -35,7 +35,7 @@ namespace Taiwan_news_crawlers
 			var context = BrowsingContext.New(config);
 			var document = context.OpenAsync(res => res.Content(Html)).Result;
 			var _allNews = new	 List<News>();
-			if (type == NewsltnNewsType.society)
+			if (type == NewsltnNewsType.strategy)
 			{
 				var List = document.QuerySelector("div.whitecon.boxTitle.boxText[data-desc=列表]");
 				var OneList = List.QuerySelectorAll(".listphoto a");
