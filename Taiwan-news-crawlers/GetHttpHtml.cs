@@ -16,19 +16,27 @@ namespace Taiwan_news_crawlers
 		/// <returns></returns>
 		public static async Task <string> GetHtml(string Url) 
 		{
-			using (HttpClient httpClient = new HttpClient())
+			try
 			{
-				//發送請求並取得回應內容
-				var responseMessage = httpClient.GetAsync(Url).Result;
-				//讀取Content內容
-				if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
-				{
-					var Result = await responseMessage.Content.ReadAsStringAsync();
-					return Result;
-				}
-				else
-					return string.Empty;
-			}
+                using (HttpClient httpClient = new HttpClient())
+                {
+                    //發送請求並取得回應內容
+                    var responseMessage = httpClient.GetAsync(Url).Result;
+                    //讀取Content內容
+                    if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        var Result = await responseMessage.Content.ReadAsStringAsync();
+                        return Result;
+                    }
+                    else
+                        return string.Empty;
+                }
+            }
+			catch 
+			{
+                return string.Empty;
+            }
+		
         }
 
 		/// <summary>
@@ -38,23 +46,31 @@ namespace Taiwan_news_crawlers
 		/// <param name="Url"></param>
 		/// <returns></returns>
 		public static async Task<T?> GetApiJson<T>(string Url)
-		{			
-			using (HttpClient httpClient = new HttpClient())
+		{
+            T? deserializeObject = default;
+            try
 			{
-                T? deserializeObject = default;
-                //發送請求並取得回應內容
-                var responseMessage = httpClient.GetAsync(Url).Result;
+                using (HttpClient httpClient = new HttpClient())
+                {                  
+                    //發送請求並取得回應內容
+                    var responseMessage = httpClient.GetAsync(Url).Result;
 
-				//讀取Content內容
-				if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
-				{
-					var Result = await responseMessage.Content.ReadAsStringAsync();
-					deserializeObject = JsonConvert.DeserializeObject<T>(Result);
-					return deserializeObject;
-				}
-				else
-					return deserializeObject;
+                    //讀取Content內容
+                    if (responseMessage.StatusCode == System.Net.HttpStatusCode.OK)
+                    {
+                        var Result = await responseMessage.Content.ReadAsStringAsync();
+                        deserializeObject = JsonConvert.DeserializeObject<T>(Result);
+                        return deserializeObject;
+                    }
+                    else
+                        return deserializeObject;
+                }
+            }
+			catch 
+			{
+                return deserializeObject;
 			}
+		
         }
 	}
 }
