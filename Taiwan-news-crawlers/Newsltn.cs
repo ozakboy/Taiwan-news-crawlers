@@ -32,7 +32,7 @@ namespace Taiwan_news_crawlers
 				Url = $"https://news.ltn.com.tw/list/breakingnews/{type}";
 			string Html = await GetHttpClient.GetHtml(Url);
 			var _allNews = new List<News>();
-			if (string.IsNullOrEmpty(Html))
+			if (!string.IsNullOrEmpty(Html))
 			{
 				var config = Configuration.Default;
 				var context = BrowsingContext.New(config);
@@ -51,7 +51,7 @@ namespace Taiwan_news_crawlers
 							PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml)
 						};					
 						Html = await GetHttpClient.GetHtml(_news.Url);
-						if (string.IsNullOrEmpty(Html))
+						if (!string.IsNullOrEmpty(Html))
 						{
 							var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
 							_news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").InnerHtml.Trim(), "");
@@ -72,7 +72,7 @@ namespace Taiwan_news_crawlers
 							PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml)
 						};
 						Html = await GetHttpClient.GetHtml(_news.Url);
-						if (string.IsNullOrEmpty(Html))
+						if (!string.IsNullOrEmpty(Html))
 						{
 							var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
 							_news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").InnerHtml.Trim(), "");
@@ -95,7 +95,7 @@ namespace Taiwan_news_crawlers
 						   UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
 					   };
 					   Html = await GetHttpClient.GetHtml(_news.Url);
-					   if (string.IsNullOrEmpty(Html))
+					   if (!string.IsNullOrEmpty(Html))
 					   {
 						   var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
 						   _news.PublishedAt = Convert.ToDateTime(Bodydocument.QuerySelector(".time")?.TextContent ?? string.Empty);
