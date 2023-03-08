@@ -18,28 +18,35 @@ namespace Taiwan_news_crawlers
 		{
 			string Url = $"https://www.chinatimes.com/realtimenews/{newsType.GetHashCode()}/?chdtv";
 			string Html = await GetHttpClient.GetHtml(Url);
-			var config = Configuration.Default;
-			var context = BrowsingContext.New(config);
-			var document = context.OpenAsync(res => res.Content(Html)).Result;
-			var NewsList = document.QuerySelectorAll("section.article-list ul li div.articlebox-compact").Select(x=>x.FirstElementChild);
 			var _allnews = new List<News>();
-            Parallel.ForEach(NewsList, async (news) =>
+			if (!string.IsNullOrEmpty(Html))
             {
-                var _news = new News()
+                var config = Configuration.Default;
+                var context = BrowsingContext.New(config);
+                var document = context.OpenAsync(res => res.Content(Html)).Result;
+                var NewsList = document.QuerySelectorAll("section.article-list ul li div.articlebox-compact").Select(x => x.FirstElementChild);
+               
+                Parallel.ForEach(NewsList, async (news) =>
                 {
-                    Title = news.QuerySelector(".title").TextContent.Trim(),
-                    Url = DefultUrl + news.QuerySelector("a")?.GetAttribute("href") ?? string.Empty,
-                    UrlToImage = news.QuerySelector("div a img")?.GetAttribute("src") ?? string.Empty,
-                    PublishedAt = Convert.ToDateTime(news.QuerySelector("time")?.GetAttribute("datetime") ?? string.Empty),
-                    Description = news.QuerySelector("p.intro").TextContent.Trim()
-                };
-                var OneNewsHtml = await GetHttpClient.GetHtml(_news.Url);
-                var Bodydocument = context.OpenAsync(res => res.Content(OneNewsHtml)).Result;
-                _news.Author = Bodydocument.QuerySelector(".meta-info .author").TextContent.Trim();
-                _news.ContentBody = Bodydocument.QuerySelector("div.article-body").TextContent.Trim();
-                _news.ContentBodyHtml = Bodydocument.QuerySelector("div.article-body").InnerHtml.Trim();
-                _allnews.Add(_news);
-            });
+                    var _news = new News()
+                    {
+                        Title = news.QuerySelector(".title").TextContent.Trim(),
+                        Url = DefultUrl + news.QuerySelector("a")?.GetAttribute("href") ?? string.Empty,
+                        UrlToImage = news.QuerySelector("div a img")?.GetAttribute("src") ?? string.Empty,
+                        PublishedAt = Convert.ToDateTime(news.QuerySelector("time")?.GetAttribute("datetime") ?? string.Empty),
+                        Description = news.QuerySelector("p.intro").TextContent.Trim()
+                    };
+                    var OneNewsHtml = await GetHttpClient.GetHtml(_news.Url);
+                    if (!string.IsNullOrEmpty(OneNewsHtml))
+                    {
+                        var Bodydocument = context.OpenAsync(res => res.Content(OneNewsHtml)).Result;
+                        _news.Author = Bodydocument.QuerySelector(".meta-info .author").TextContent.Trim();
+                        _news.ContentBody = Bodydocument.QuerySelector("div.article-body").TextContent.Trim();
+                        _news.ContentBodyHtml = Bodydocument.QuerySelector("div.article-body").InnerHtml.Trim();
+                        _allnews.Add(_news);
+                    }
+                });
+            }
 			return _allnews;
 		}
 

@@ -31,73 +31,83 @@ namespace Taiwan_news_crawlers
 			else
 				Url = $"https://news.ltn.com.tw/list/breakingnews/{type}";
 			string Html = await GetHttpClient.GetHtml(Url);
-			var config = Configuration.Default;
-			var context = BrowsingContext.New(config);
-			var document = context.OpenAsync(res => res.Content(Html)).Result;
-			var _allNews = new	 List<News>();
-			if (type == NewsltnNewsType.strategy)
+			var _allNews = new List<News>();
+			if (string.IsNullOrEmpty(Html))
 			{
-				var List = document.QuerySelector("div.whitecon.boxTitle.boxText[data-desc=列表]");
-				var OneList = List.QuerySelectorAll(".listphoto a");
-				Parallel.ForEach(OneList, async (news) =>
+				var config = Configuration.Default;
+				var context = BrowsingContext.New(config);
+				var document = context.OpenAsync(res => res.Content(Html)).Result;
+				if (type == NewsltnNewsType.strategy)
 				{
-					var _news = new News()
+					var List = document.QuerySelector("div.whitecon.boxTitle.boxText[data-desc=列表]");
+					var OneList = List.QuerySelectorAll(".listphoto a");
+					Parallel.ForEach(OneList, async (news) =>
 					{
-						Title = news.GetAttribute("title") ?? string.Empty,
-						Url = news.GetAttribute("href") ?? string.Empty,
-						UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
-						PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml)
-					};
-					Html = await GetHttpClient.GetHtml(_news.Url);
-					var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
-					_news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").InnerHtml.Trim(), "");
-					_news.ContentBody = Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").TextContent.Trim();
-					_news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty;
-					_news.Author = Bodydocument.QuerySelector("head meta[name=author]").GetAttribute("content") ?? string.Empty;
-					_allNews.Add(_news);
-				});
-				var TwoList = List.QuerySelectorAll("ul[data-desc=列表] li");
-				Parallel.ForEach(TwoList, async (news) =>
+						var _news = new News()
+						{
+							Title = news.GetAttribute("title") ?? string.Empty,
+							Url = news.GetAttribute("href") ?? string.Empty,
+							UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
+							PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml)
+						};					
+						Html = await GetHttpClient.GetHtml(_news.Url);
+						if (string.IsNullOrEmpty(Html))
+						{
+							var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
+							_news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").InnerHtml.Trim(), "");
+							_news.ContentBody = Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").TextContent.Trim();
+							_news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty;
+							_news.Author = Bodydocument.QuerySelector("head meta[name=author]").GetAttribute("content") ?? string.Empty;
+							_allNews.Add(_news);
+						}
+					});
+					var TwoList = List.QuerySelectorAll("ul[data-desc=列表] li");
+					Parallel.ForEach(TwoList, async (news) =>
+					{
+						var _news = new News()
+						{
+							Title = news.QuerySelector("a").GetAttribute("title") ?? string.Empty,
+							Url = news.QuerySelector("a").GetAttribute("href") ?? string.Empty,
+							UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
+							PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml)
+						};
+						Html = await GetHttpClient.GetHtml(_news.Url);
+						if (string.IsNullOrEmpty(Html))
+						{
+							var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
+							_news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").InnerHtml.Trim(), "");
+							_news.ContentBody = Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").TextContent.Trim();
+							_news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty;
+							_news.Author = Bodydocument.QuerySelector("head meta[name=author]").GetAttribute("content") ?? string.Empty;
+							_allNews.Add(_news);
+						}
+					});
+				}
+				else
 				{
-					var _news = new News()
-					{
-						Title = news.QuerySelector("a").GetAttribute("title") ?? string.Empty,
-						Url = news.QuerySelector("a").GetAttribute("href") ?? string.Empty,
-						UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
-						PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml)
-					};
-					Html = await GetHttpClient.GetHtml(_news.Url);
-					var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
-					_news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").InnerHtml.Trim(), "");
-					_news.ContentBody = Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").TextContent.Trim();
-					_news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty;
-					_news.Author = Bodydocument.QuerySelector("head meta[name=author]").GetAttribute("content") ?? string.Empty;
-					_allNews.Add(_news);
-				});
-
-			}
-			else
-			{
-				var NewsList = document.QuerySelectorAll("ul.list li");
-				Parallel.ForEach(NewsList, async (news) =>
-			   {
-				   var _news = new News()
+					var NewsList = document.QuerySelectorAll("ul.list li");
+					Parallel.ForEach(NewsList, async (news) =>
 				   {
-					   Title = news.QuerySelector(".title")?.TextContent.Trim(),
-					   Url = news.QuerySelector("a")?.GetAttribute("href") ?? string.Empty,
-					   UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
-				   };
-				   Html = await GetHttpClient.GetHtml(_news.Url);
-				   var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
-				   _news.PublishedAt = Convert.ToDateTime(Bodydocument.QuerySelector(".time")?.TextContent ?? string.Empty);
-				   _news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".text.boxTitle.boxText").InnerHtml.Trim(), "");
-				   _news.ContentBody = Bodydocument.QuerySelector(".text.boxTitle.boxText").TextContent.Trim();
-				   _news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty;
-				   _news.Author = Bodydocument.QuerySelector("head meta[name=author]").GetAttribute("content") ?? string.Empty;
-				   _allNews.Add(_news);
-			   });				
+					   var _news = new News()
+					   {
+						   Title = news.QuerySelector(".title")?.TextContent.Trim(),
+						   Url = news.QuerySelector("a")?.GetAttribute("href") ?? string.Empty,
+						   UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
+					   };
+					   Html = await GetHttpClient.GetHtml(_news.Url);
+					   if (string.IsNullOrEmpty(Html))
+					   {
+						   var Bodydocument = context.OpenAsync(res => res.Content(Html)).Result;
+						   _news.PublishedAt = Convert.ToDateTime(Bodydocument.QuerySelector(".time")?.TextContent ?? string.Empty);
+						   _news.ContentBodyHtml = rRemScript.Replace(Bodydocument.QuerySelector(".text.boxTitle.boxText").InnerHtml.Trim(), "");
+						   _news.ContentBody = Bodydocument.QuerySelector(".text.boxTitle.boxText").TextContent.Trim();
+						   _news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty;
+						   _news.Author = Bodydocument.QuerySelector("head meta[name=author]").GetAttribute("content") ?? string.Empty;
+						   _allNews.Add(_news);
+					   }
+				   });
+				}
 			}
-
 			return _allNews;
 		}
 
