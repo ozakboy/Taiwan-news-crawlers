@@ -43,7 +43,8 @@ namespace Taiwan_news_crawlers
 					ContentBodyHtml = OneNews.content,
 					PublishedAt = IntTimeToDateTIme(OneNews.publishAt) ,
 					Url = $"{CnyesUrl}news/id/{OneNews.newsId}",
-					UrlToImage = OneNews.coverSrc?.l.src ?? string.Empty
+					UrlToImage = OneNews.coverSrc?.l.src ?? string.Empty,
+                    Source = "鉅亨網"
                 };
 				list.Add(CreateNews);
 			}

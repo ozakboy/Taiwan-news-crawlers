@@ -34,7 +34,8 @@ namespace Taiwan_news_crawlers
                         Url = DefultUrl + news.QuerySelector("a")?.GetAttribute("href") ?? string.Empty,
                         UrlToImage = news.QuerySelector("div a img")?.GetAttribute("src") ?? string.Empty,
                         PublishedAt = Convert.ToDateTime(news.QuerySelector("time")?.GetAttribute("datetime") ?? string.Empty),
-                        Description = news.QuerySelector("p.intro").TextContent.Trim()
+                        Description = news.QuerySelector("p.intro").TextContent.Trim(),
+                        Source = "中時新聞網"
                     };
                     var OneNewsHtml = await GetHttpClient.GetHtml(_news.Url);
                     if (!string.IsNullOrEmpty(OneNewsHtml))

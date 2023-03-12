@@ -48,8 +48,9 @@ namespace Taiwan_news_crawlers
 							Title = news.GetAttribute("title") ?? string.Empty,
 							Url = news.GetAttribute("href") ?? string.Empty,
 							UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
-							PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml)
-						};					
+							PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml),
+							Source = "自由時報"
+                        };					
 						Html = await GetHttpClient.GetHtml(_news.Url);
 						if (!string.IsNullOrEmpty(Html))
 						{
@@ -69,8 +70,9 @@ namespace Taiwan_news_crawlers
 							Title = news.QuerySelector("a").GetAttribute("title") ?? string.Empty,
 							Url = news.QuerySelector("a").GetAttribute("href") ?? string.Empty,
 							UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
-							PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml)
-						};
+							PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml),
+                            Source = "自由時報"
+                        };
 						Html = await GetHttpClient.GetHtml(_news.Url);
 						if (!string.IsNullOrEmpty(Html))
 						{
@@ -93,7 +95,8 @@ namespace Taiwan_news_crawlers
 						   Title = news.QuerySelector(".title")?.TextContent.Trim(),
 						   Url = news.QuerySelector("a")?.GetAttribute("href") ?? string.Empty,
 						   UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
-					   };
+                           Source = "自由時報"
+                       };
 					   Html = await GetHttpClient.GetHtml(_news.Url);
 					   if (!string.IsNullOrEmpty(Html))
 					   {
