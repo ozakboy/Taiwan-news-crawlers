@@ -1,4 +1,4 @@
-[![nuget](https://img.shields.io/badge/nuget-Taiwan-news-crawlers-blue)](https://www.nuget.org/packages/Taiwan-news-crawlers)
+[![nuget](https://img.shields.io/badge/nuget-Taiwan--ews--crawlers-blue)](https://www.nuget.org/packages/Taiwan-news-crawlers)
 
 # Taiwan-news-crawlers
 台灣新聞爬蟲
