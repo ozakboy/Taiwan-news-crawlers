@@ -58,7 +58,7 @@ namespace Taiwan_news_crawlers
                     {
                         Title = element.QuerySelector("span").TextContent,
                         Url = element.QuerySelector("a").GetAttribute("href") ?? string.Empty,
-                        PublishedAt = Convert.ToDateTime(element.QuerySelector("date")?.TextContent ?? DateTime.Now.ToString()),
+                        PublishedAt = Convert.ToDateTime(element.QuerySelector(".date")?.TextContent ?? DateTime.Now.ToString()),
                         UrlToImage = string.Empty,
                         Source = "中央通訊社"
                     };
@@ -84,6 +84,7 @@ namespace Taiwan_news_crawlers
 
             _news.ContentBody = ContentBodyHtml.TextContent.Trim();
 
+            _news.UrlToImage = Bodydocument.QuerySelector(".fullPic")?.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty;
             _news.Author = Bodydocument.QuerySelector("head meta[itemprop=author]").GetAttribute("content") ?? string.Empty; 
             _news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty; 
         }

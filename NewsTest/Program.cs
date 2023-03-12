@@ -1,10 +1,47 @@
 ﻿using Taiwan_news_crawlers;
 using ozakboy.NLOG;
+using static Taiwan_news_crawlers.Cna;
+using System.Collections.Generic;
 
 do
 {
-
     var i = 1;
+
+
+    LOG.Info_Log($"=========Cna============");
+
+    Cna _cna = new Cna();
+    List<CnaType> _CnaNewsTypes = new List<CnaType>() 
+    {
+        CnaType.aipl,
+        CnaType.aopl,
+        CnaType.acn,
+        CnaType.aie,
+        CnaType.asc,
+        CnaType.ait,
+        CnaType.ahel,
+        CnaType.asoc,
+        CnaType.aloc,
+        CnaType.acul,
+        CnaType.aspt,
+        CnaType.amov,
+    };
+    foreach (var item in _CnaNewsTypes)
+    {
+        LOG.Info_Log($"分類:{item}");
+        var list = await _cna.GetNews(item);
+        foreach (var c in list)
+        {
+            LOG.Info_Log($"{i}.{c.Title}");
+            i++;
+        }
+        i = 1;
+    }
+
+
+
+    LOG.Info_Log($"=========Cna============");
+
 
     LOG.Info_Log($"=========Chinatimes============");
     Chinatimes _chinatimes = new Chinatimes();
