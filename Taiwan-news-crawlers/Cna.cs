@@ -56,7 +56,7 @@ namespace Taiwan_news_crawlers
                 {
                     var _news = new News()
                     {
-                        Title = element.QuerySelector("span").TextContent,
+                        Title = element.QuerySelector("span").TextContent.Trim(),
                         Url = element.QuerySelector("a").GetAttribute("href") ?? string.Empty,
                         PublishedAt = Convert.ToDateTime(element.QuerySelector(".date")?.TextContent ?? DateTime.Now.ToString()),
                         UrlToImage = string.Empty,
