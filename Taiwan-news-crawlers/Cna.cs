@@ -63,7 +63,8 @@ namespace Taiwan_news_crawlers
                         Source = "中央通訊社"
                     };
                     await GetNewsBodyHtml(_news);
-                    _allNews.Add(_news);
+                    if(!string.IsNullOrEmpty(_news.ContentBodyHtml))
+                        _allNews.Add(_news);
                 }
             });
             return _allNews;
@@ -72,21 +73,24 @@ namespace Taiwan_news_crawlers
         private async Task GetNewsBodyHtml(News _news)
         {
             var OneNewsHtml = await GetHttpClient.GetHtml(_news.Url);
-            var Bodydocument = await _context.OpenAsync(res => res.Content(OneNewsHtml));
-            var centralContent = Bodydocument.QuerySelector(".centralContent");
-            var R1 = centralContent.QuerySelector(".paragraph").QuerySelectorAll(".paragraph.moreArticle.flexhalf");
-            var R2 = centralContent.QuerySelector(".paragraph").QuerySelector(".paragraph.bottomBox");
-            var ContentBodyHtml = centralContent.QuerySelector(".paragraph");
-            foreach ( var c in R1)
-                  ContentBodyHtml.RemoveElement(c);
-              ContentBodyHtml.RemoveElement(R2);
-            _news.ContentBodyHtml = ContentBodyHtml.InnerHtml;
+            if (!string.IsNullOrEmpty(OneNewsHtml))
+            {
+                var Bodydocument = await _context.OpenAsync(res => res.Content(OneNewsHtml));
+                var centralContent = Bodydocument.QuerySelector(".centralContent");
+                var R1 = centralContent.QuerySelector(".paragraph").QuerySelectorAll(".paragraph.moreArticle.flexhalf");
+                var R2 = centralContent.QuerySelector(".paragraph").QuerySelector(".paragraph.bottomBox");
+                var ContentBodyHtml = centralContent.QuerySelector(".paragraph");
+                foreach (var c in R1)
+                    ContentBodyHtml.RemoveElement(c);
+                ContentBodyHtml.RemoveElement(R2);
+                _news.ContentBodyHtml = ContentBodyHtml.InnerHtml;
 
-            _news.ContentBody = ContentBodyHtml.TextContent.Trim();
+                _news.ContentBody = ContentBodyHtml.TextContent.Trim();
 
-            _news.UrlToImage = Bodydocument.QuerySelector(".fullPic")?.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty;
-            _news.Author = Bodydocument.QuerySelector("head meta[itemprop=author]").GetAttribute("content") ?? string.Empty; 
-            _news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty; 
+                _news.UrlToImage = Bodydocument.QuerySelector(".fullPic")?.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty;
+                _news.Author = Bodydocument.QuerySelector("head meta[itemprop=author]").GetAttribute("content") ?? string.Empty;
+                _news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty;
+            }
         }
 
         public enum CnaType
