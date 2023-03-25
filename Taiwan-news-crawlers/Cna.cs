@@ -53,19 +53,22 @@ namespace Taiwan_news_crawlers
 
             Parallel.ForEach(newsHtml, async (element) =>
             {
+                try
                 {
-                    var _news = new News()
-                    {
-                        Title = element.QuerySelector("span").TextContent.Trim(),
-                        Url = element.QuerySelector("a").GetAttribute("href") ?? string.Empty,
-                        PublishedAt = Convert.ToDateTime(element.QuerySelector(".date")?.TextContent ?? DateTime.Now.ToString()),
-                        UrlToImage = string.Empty,
-                        Source = "中央通訊社"
-                    };
-                    await GetNewsBodyHtml(_news);
-                    if(!string.IsNullOrEmpty(_news.ContentBodyHtml))
-                        _allNews.Add(_news);
-                }
+					var _news = new News()
+					{
+						Title = element.QuerySelector("span").TextContent.Trim(),
+						Url = element.QuerySelector("a").GetAttribute("href") ?? string.Empty,
+						PublishedAt = Convert.ToDateTime(element.QuerySelector(".date")?.TextContent ?? DateTime.Now.ToString()),
+						UrlToImage = string.Empty,
+						Source = "中央通訊社"
+					};
+					await GetNewsBodyHtml(_news);
+					if (!string.IsNullOrEmpty(_news.ContentBodyHtml))
+						_allNews.Add(_news);
+				}
+                catch{}
+
             });
             return _allNews;
         }
@@ -77,12 +80,18 @@ namespace Taiwan_news_crawlers
             {
                 var Bodydocument = await _context.OpenAsync(res => res.Content(OneNewsHtml));
                 var centralContent = Bodydocument.QuerySelector(".centralContent");
-                var R1 = centralContent.QuerySelector(".paragraph").QuerySelectorAll(".paragraph.moreArticle.flexhalf");
-                var R2 = centralContent.QuerySelector(".paragraph").QuerySelector(".paragraph.bottomBox");
-                var ContentBodyHtml = centralContent.QuerySelector(".paragraph");
-                foreach (var c in R1)
-                    ContentBodyHtml.RemoveElement(c);
-                ContentBodyHtml.RemoveElement(R2);
+                var R1 = centralContent?.QuerySelector(".paragraph")?.QuerySelectorAll(".paragraph.moreArticle.flexhalf") ?? default;
+                var R2 = centralContent?.QuerySelector(".paragraph")?.QuerySelector(".paragraph.bottomBox") ?? default;
+                var ContentBodyHtml = centralContent?.QuerySelector(".paragraph") ?? default;
+                if (ContentBodyHtml is null)
+                    return;
+                if (R1 is not null)
+                {
+                    foreach (var c in R1)
+                        ContentBodyHtml?.RemoveElement(c);
+                }
+                if (R2 is not null)
+                    ContentBodyHtml?.RemoveElement(R2);
                 _news.ContentBodyHtml = ContentBodyHtml.InnerHtml;
 
                 _news.ContentBody = ContentBodyHtml.TextContent.Trim();

@@ -18,6 +18,7 @@
     <AssemblyVersion></AssemblyVersion>
     <FileVersion></FileVersion>
     <Version>1.2.8</Version>
+    <Copyright>ozakboy</Copyright>
   </PropertyGroup>
 
   <ItemGroup>
