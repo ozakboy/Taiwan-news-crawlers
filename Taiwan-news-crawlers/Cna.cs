@@ -100,58 +100,58 @@ namespace Taiwan_news_crawlers
                 _news.Author = Bodydocument.QuerySelector("head meta[itemprop=author]").GetAttribute("content") ?? string.Empty;
                 _news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty;
             }
-        }
-
-        public enum CnaType
-        {
-            /// <summary>
-            /// 政治
-            /// </summary>
-            aipl,
-            /// <summary>
-            /// 國際
-            /// </summary>
-            aopl,
-            /// <summary>
-            /// 兩岸
-            /// </summary>
-            acn,
-            /// <summary>
-            /// 產經
-            /// </summary>
-            aie,
-            /// <summary>
-            /// 證券
-            /// </summary>
-            asc,
-            /// <summary>
-            /// 科技
-            /// </summary>
-            ait,
-            /// <summary>
-            /// 生活
-            /// </summary>
-            ahel,
-            /// <summary>
-            /// 社會
-            /// </summary>
-            asoc,
-            /// <summary>
-            /// 地方
-            /// </summary>
-            aloc,
-            /// <summary>
-            /// 文化
-            /// </summary>
-            acul,
-            /// <summary>
-            /// 運動
-            /// </summary>
-            aspt,
-            /// <summary>
-            /// 娛樂
-            /// </summary>
-            amov
-        }
+        }             
     }
+
+	public enum CnaType
+	{
+		/// <summary>
+		/// 政治
+		/// </summary>
+		aipl,
+		/// <summary>
+		/// 國際
+		/// </summary>
+		aopl,
+		/// <summary>
+		/// 兩岸
+		/// </summary>
+		acn,
+		/// <summary>
+		/// 產經
+		/// </summary>
+		aie,
+		/// <summary>
+		/// 證券
+		/// </summary>
+		asc,
+		/// <summary>
+		/// 科技
+		/// </summary>
+		ait,
+		/// <summary>
+		/// 生活
+		/// </summary>
+		ahel,
+		/// <summary>
+		/// 社會
+		/// </summary>
+		asoc,
+		/// <summary>
+		/// 地方
+		/// </summary>
+		aloc,
+		/// <summary>
+		/// 文化
+		/// </summary>
+		acul,
+		/// <summary>
+		/// 運動
+		/// </summary>
+		aspt,
+		/// <summary>
+		/// 娛樂
+		/// </summary>
+		amov
+	}
 }
