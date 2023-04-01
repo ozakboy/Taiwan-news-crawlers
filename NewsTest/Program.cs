@@ -1,14 +1,49 @@
 ﻿using Taiwan_news_crawlers;
 using ozakboy.NLOG;
-using static Taiwan_news_crawlers.Cna;
-using System.Collections.Generic;
 
 do
 {
     var i = 1;
 
+	LOG.Info_Log($"=========Setn============");
 
-    LOG.Info_Log($"=========Cna============");
+    Setn setn = new Setn();
+    List<SetnType> _setnTypes = new List<SetnType>() 
+    {
+		SetnType.politics,
+        SetnType.Society,
+        SetnType.internationality,
+        SetnType.bilateral,
+        SetnType.Life,
+        SetnType.sports,
+        SetnType.local,
+        SetnType.financial,
+        SetnType.Famous,
+        SetnType.novel,
+        SetnType.ScienceAndTechnology,
+        SetnType.car,
+        SetnType.pet,
+        SetnType.healthy            
+	};
+	foreach (var item in _setnTypes)
+	{
+		LOG.Info_Log($"分類:{item}");
+		var list = await setn.GetNews(item);
+		foreach (var c in list)
+		{
+			LOG.Info_Log($"{i}.{c.Title}");
+			i++;
+		}
+		i = 1;
+	}
+
+
+
+	LOG.Info_Log($"=========Setn============");
+
+
+
+	LOG.Info_Log($"=========Cna============");
 
     Cna _cna = new Cna();
     List<CnaType> _CnaNewsTypes = new List<CnaType>() 
