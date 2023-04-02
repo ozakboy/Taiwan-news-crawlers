@@ -1,11 +1,12 @@
 [![nuget](https://img.shields.io/badge/nuget-Taiwan--ews--crawlers-blue)](https://www.nuget.org/packages/Taiwan-news-crawlers)
 
 # Taiwan-news-crawlers
+
 台灣新聞爬蟲
 
 ## 簡介
 
-利用 C# .net core 寫的的新聞爬蟲函式庫 
+利用 C# .net 6 寫的的新聞爬蟲函式庫 
 
 自用、長期維護、緩慢更新
 
