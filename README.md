@@ -29,3 +29,15 @@
 6. 工商時報
 7. 華視
 
+## 輸出格式
+| key | value |
+| :--- | :--- |
+| Title | 標題|
+| ContentBody | 內文|
+| ContentBodyHtml | 內文(含HTML) |
+| Author | 作者 |
+| Description | 備註 |
+| Url | 原始連結 |
+| UrlToImage | 圖片連結 |
+| Source | 新聞來源 |
+| PublishedAt | 發布時間 |
