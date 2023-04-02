@@ -1,7 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net6.0</TargetFramework>
+    <TargetFrameworks>net6.0;net7.0;</TargetFrameworks>
+    <LangVersion>10.0</LangVersion>
     <RootNamespace>Taiwan_news_crawlers</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
@@ -14,11 +15,14 @@
     <PackageTags>news Taiwan crawlers</PackageTags>
     <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageLicenseFile>LICENSE</PackageLicenseFile>
-    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-    <AssemblyVersion></AssemblyVersion>
-    <FileVersion></FileVersion>
+    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>    
     <Version>1.4.11</Version>
     <Copyright>ozakboy</Copyright>
+    <PackAsTool>True</PackAsTool>
+    <NeutralLanguage>zh-TW</NeutralLanguage>
+    <AnalysisLevel>6.0</AnalysisLevel>
+    <GenerateDocumentationFile>True</GenerateDocumentationFile>
+    <DocumentationFile>file.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -34,7 +38,7 @@
 
   <ItemGroup>
     <PackageReference Include="AngleSharp" Version="1.0.1" />
-    <PackageReference Include="Newtonsoft.Json" Version="13.0.2" />
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
   </ItemGroup>
 
 </Project>
