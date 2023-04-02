@@ -48,15 +48,19 @@ namespace Taiwan_news_crawlers
 			var newsHtml = _element.QuerySelectorAll(".item-content");
 			Parallel.ForEach(newsHtml, async (element) =>
 			{
-				var _news = new News();
-				_news.Url = element.FirstElementChild.Children[1].GetAttribute("href") ?? string.Empty;
-				var Time = element.FirstElementChild.Children[1].QuerySelector("span")?.TextContent.Replace("|", "").Trim() ?? string.Empty;
-				_news.PublishedAt = Convert.ToDateTime($"{DateTime.Now.Year}/{Time}");
-				_news.Source = "工商時報";
-				_news.Title = element.FirstElementChild.Children[1].TextContent.Trim().Replace("|", "").Replace(Time, "").Trim();
-				await GetNewsBodyHtml(_news);
-				if (!string.IsNullOrEmpty(_news.ContentBodyHtml))
-					_allNews.Add(_news);
+				try
+				{
+					var _news = new News();
+					_news.Url = element.FirstElementChild.Children[1].GetAttribute("href") ?? string.Empty;
+					var Time = element.FirstElementChild.Children[1].QuerySelector("span")?.TextContent.Replace("|", "").Trim() ?? string.Empty;
+					_news.PublishedAt = Convert.ToDateTime($"{DateTime.Now.Year}/{Time}");
+					_news.Source = "工商時報";
+					_news.Title = element.FirstElementChild.Children[1].TextContent.Trim().Replace("|", "").Replace(Time, "").Trim();
+					await GetNewsBodyHtml(_news);
+					if (!string.IsNullOrEmpty(_news.ContentBodyHtml))
+						_allNews.Add(_news);
+				}
+				catch { }			
 			});		
 			return _allNews;
 		}
