@@ -26,9 +26,9 @@ namespace Taiwan_news_crawlers
 		/// </summary>
 		/// <param name="_cnaType"></param>
 		/// <returns></returns>
-		public async Task<List<News>> GetNews(SetnType _cnaType)
+		public async Task<List<News>> GetNews(SetnType _setnType)
 		{
-			string Url = DefulUrl + $"/ViewAll.aspx?PageGroupID={_cnaType.GetHashCode()}";
+			string Url = DefulUrl + $"/ViewAll.aspx?PageGroupID={_setnType.GetHashCode()}";
 			string Html = await GetHttpClient.GetHtml(Url);
 			var _allNews = new List<News>();
 			if (!string.IsNullOrEmpty(Html))
