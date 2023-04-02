@@ -4,6 +4,45 @@ using ozakboy.NLOG;
 do
 {
     var i = 1;
+
+
+
+	LOG.Info_Log($"=========Cts============");
+
+    Cts cts = new Cts();
+    List<CtsType> _ctsTypes = new List<CtsType>()
+    {
+        CtsType.weather,
+        CtsType.politics,
+        CtsType.international,
+        CtsType.society,
+        CtsType.sports,
+        CtsType.life,
+        CtsType.money,
+        CtsType.taiwanese,
+        CtsType.local,
+        CtsType.pr,
+        CtsType.general,
+        CtsType.arts,
+        CtsType.entertain,
+	};
+	foreach (var item in _ctsTypes)
+	{
+		LOG.Info_Log($"分類:{item}");
+		var list = await cts.GetNews(item);
+		foreach (var c in list)
+		{
+			LOG.Info_Log($"{i}.{c.Title}");
+			i++;
+		}
+		i = 1;
+	}
+
+	LOG.Info_Log($"=========Cts============");
+
+
+    i = 1;
+
 	LOG.Info_Log($"=========Ctee============");
 
     Ctee ctee = new Ctee();
