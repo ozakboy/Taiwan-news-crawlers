@@ -41,3 +41,7 @@
 | UrlToImage | 圖片連結 |
 | Source | 新聞來源 |
 | PublishedAt | 發布時間 |
+
+## License
+
+The MIT License
