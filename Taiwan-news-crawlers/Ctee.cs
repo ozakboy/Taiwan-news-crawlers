@@ -1,117 +1,119 @@
-﻿using AngleSharp;
-using AngleSharp.Dom;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
-
-namespace Taiwan_news_crawlers
+﻿namespace Taiwan_news_crawlers
 {
-	/// <summary>
-	/// 工商時報
-	/// </summary>
-	public class Ctee
-	{
-		/// <summary>
-		/// 工商時報網址
-		/// </summary>
-		private static readonly string DefulUrl = "https://ctee.com.tw/";
-		private static IBrowsingContext _context;
+    /// <summary>
+    /// 工商時報
+    /// </summary>
+    public class Ctee
+    {
+        /// <summary>
+        /// 工商時報網址
+        /// </summary>
+        private static readonly string DefulUrl = "https://ctee.com.tw/";
 
-		/// <summary>
-		/// 取得新聞
-		/// </summary>
-		/// <param name="_cnaType"></param>
-		/// <returns></returns>
-		public async Task<List<News>> GetNews(CteeType _cteeType)
-		{
-			string Url = DefulUrl + $"livenews/{_cteeType}";
-			string Html = await GetHttpClient.GetHtml(Url);
-			var _allNews = new List<News>();
-			if (!string.IsNullOrEmpty(Html))
-			{
-				var config = Configuration.Default;
-				_context = BrowsingContext.New(config);
-				var document = await _context.OpenAsync(res => res.Content(Html));
-				var MainList = document.QuerySelector(".listing.listing-text.listing-text-2.clearfix");
-				if (MainList is not null)
-					_allNews.AddRange(await GetHtmlNewsObject(MainList));
-			}
-			return _allNews;
-		}
+        /// <summary>
+        /// 取得新聞
+        /// </summary>
+        public async Task<List<News>> GetNews(CteeType cteeType)
+        {
+            string url = DefulUrl + $"livenews/{cteeType}";
+            string html = await GetHttpClient.GetHtml(url);
+            var allNews = new List<News>();
 
-		private async Task<List<News>> GetHtmlNewsObject(IElement? _element)
-		{
-			var _allNews = new List<News>();
-			var newsHtml = _element.QuerySelectorAll(".item-content");
-			Parallel.ForEach(newsHtml, async (element) =>
-			{
-				try
-				{
-					var _news = new News();
-					_news.Url = element.FirstElementChild.Children[1].GetAttribute("href") ?? string.Empty;
-					var Time = element.FirstElementChild.Children[1].QuerySelector("span")?.TextContent.Replace("|", "").Trim() ?? string.Empty;
-					_news.PublishedAt = Convert.ToDateTime($"{DateTime.Now.Year}/{Time}");
-					_news.Source = "工商時報";
-					_news.Title = element.FirstElementChild.Children[1].TextContent.Trim().Replace("|", "").Replace(Time, "").Trim();
-					await GetNewsBodyHtml(_news);
-					if (!string.IsNullOrEmpty(_news.ContentBodyHtml))
-						_allNews.Add(_news);
-				}
-				catch { }			
-			});		
-			return _allNews;
-		}
+            if (string.IsNullOrEmpty(html)) return allNews;
 
-		/// <summary>
-		/// 取得新聞內文
-		/// </summary>
-		/// <param name="_news"></param>
-		/// <returns></returns>
-		private async Task GetNewsBodyHtml(News _news)
-		{
-			var OneNewsHtml = await GetHttpClient.GetHtml(_news.Url);
-			if (!string.IsNullOrEmpty(OneNewsHtml))
-			{
-				var Bodydocument = await _context.OpenAsync(res => res.Content(OneNewsHtml));
-				var centralContent = Bodydocument.QuerySelector(".entry-content.clearfix.single-post-content");
-				_news.Author = Bodydocument.QuerySelector(".post-meta-author")?.TextContent ?? string.Empty;
-				_news.Description = string.Empty;
-				_news.UrlToImage = Bodydocument.QuerySelector(".single-featured")?.QuerySelector("figure")?.QuerySelector("img")?.GetAttribute("src") ?? string.Empty;
+            var parser = new HtmlParser(html);
+            var mainList = parser.QuerySelector(".listing.listing-text.listing-text-2.clearfix");
+            if (mainList == null) return allNews;
 
-				_news.ContentBody = centralContent?.TextContent ?? string.Empty;
-				_news.ContentBodyHtml = centralContent.InnerHtml;
-			}
-		}
-	}
+            var newsItems = mainList.QuerySelectorAll(".item-content");
+            var tasks = newsItems.Select(async element =>
+            {
+                try
+                {
+                    var firstChild = element.QuerySelector("a");
+                    if (firstChild == null) return null;
 
-	public enum CteeType
-	{
-		/// <summary>
-		/// 財經
-		/// </summary>
-		aj,
-		/// <summary>
-		/// 國際
-		/// </summary>
-		gj,
-		/// <summary>
-		/// 政治
-		/// </summary>
-		jj,
-		/// <summary>
-		/// 兩岸
-		/// </summary>
-		lm,
-		/// <summary>
-		/// 科技
-		/// </summary>
-		kj,
-		/// <summary>
-		/// 生活
-		/// </summary>
-		ch
-	}
+                    var timeSpan = firstChild.QuerySelector("span");
+                    var timeText = timeSpan?.TextContent.Replace("|", "").Trim() ?? string.Empty;
+
+                    var news = new News
+                    {
+                        Url = firstChild.GetAttribute("href") ?? string.Empty,
+                        Source = "工商時報",
+                        Title = firstChild.TextContent.Trim()
+                                        .Replace("|", "")
+                                        .Replace(timeText, "")
+                                        .Trim()
+                    };
+
+                    if (!string.IsNullOrEmpty(timeText))
+                    {
+                        news.PublishedAt = DateTime.Parse($"{DateTime.Now.Year}/{timeText}");
+                    }
+
+                    await FetchNewsContent(news);
+                    if (!string.IsNullOrEmpty(news.ContentBodyHtml))
+                    {
+                        return news;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing news: {ex.Message}");
+                }
+                return null;
+            });
+
+            var results = await Task.WhenAll(tasks);
+            allNews.AddRange(results.Where(n => n != null)!);
+            return allNews;
+        }
+
+        private async Task FetchNewsContent(News news)
+        {
+            var html = await GetHttpClient.GetHtml(news.Url);
+            if (string.IsNullOrEmpty(html)) return;
+
+            var parser = new HtmlParser(html);
+            var contentElement = parser.QuerySelector(".entry-content.clearfix.single-post-content");
+            if (contentElement == null) return;
+
+            var authorElement = parser.QuerySelector(".post-meta-author");
+            var imageElement = parser.QuerySelector(".single-featured figure img");
+
+            news.Author = authorElement?.TextContent?.Trim() ?? string.Empty;
+            news.Description = string.Empty;
+            news.UrlToImage = imageElement?.GetAttribute("src") ?? string.Empty;
+            news.ContentBody = contentElement.TextContent?.Trim() ?? string.Empty;
+            news.ContentBodyHtml = contentElement.InnerHtml?.Trim() ?? string.Empty;
+        }
+    }
+
+    public enum CteeType
+    {
+        /// <summary>
+        /// 財經
+        /// </summary>
+        aj,
+        /// <summary>
+        /// 國際
+        /// </summary>
+        gj,
+        /// <summary>
+        /// 政治
+        /// </summary>
+        jj,
+        /// <summary>
+        /// 兩岸
+        /// </summary>
+        lm,
+        /// <summary>
+        /// 科技
+        /// </summary>
+        kj,
+        /// <summary>
+        /// 生活
+        /// </summary>
+        ch
+    }
 }

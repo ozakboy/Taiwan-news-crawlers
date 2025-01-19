@@ -1,222 +1,254 @@
-﻿using AngleSharp;
-using AngleSharp.Dom;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection.Metadata;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-
-namespace Taiwan_news_crawlers
+﻿namespace Taiwan_news_crawlers
 {
-	/// <summary>
-	/// 自由時報
-	/// </summary>
-	public class Newsltn
-	{
-		/// <summary>
-		/// 自由時報網址
-		/// </summary>
-		private static readonly string DefulUrl = "https://news.ltn.com.tw/";
-		/// <summary>
-		/// 自由時報-自由財經
-		/// </summary>
-		private static readonly string DefulStrategyUrl = "https://ec.ltn.com.tw/";
-        private static IBrowsingContext _context;
+    /// <summary>
+    /// 自由時報
+    /// </summary>
+    public class Newsltn
+    {
+        /// <summary>
+        /// 自由時報網址
+        /// </summary>
+        private static readonly string DefulUrl = "https://news.ltn.com.tw/";
+        /// <summary>
+        /// 自由時報-自由財經
+        /// </summary>
+        private static readonly string DefulStrategyUrl = "https://ec.ltn.com.tw/";
 
-		public async Task<List<News>> GetNews(NewsltnNewsType type)
-		{
-			string Url = string.Empty;
-			if (type == NewsltnNewsType.strategy)
-				Url = $"{DefulStrategyUrl}list/strategy";
-			else
-				Url = $"{DefulUrl}list/breakingnews/{type}";
-			string Html = await GetHttpClient.GetHtml(Url);
-			var _allNews = new List<News>();
-			if (!string.IsNullOrEmpty(Html))
-			{
-				var config = Configuration.Default;
-				 _context = BrowsingContext.New(config);
-				var document = _context.OpenAsync(res => res.Content(Html)).Result;
-				if (type == NewsltnNewsType.strategy)
-				{
-                    var List = document.QuerySelector("div.whitecon.boxTitle.boxText[data-desc=列表]");
-                    _allNews.AddRange(await GetHtmlNewsStrategyObject(List));
-				}
-				else
-				{
-                    var List = document.QuerySelector("ul.list ");
-                    _allNews.AddRange(await GetHtmlNewsObject(List));			
-				}
-			}
-			return _allNews;
-		}
-
-
-        private async Task<List<News>> GetHtmlNewsStrategyObject(IElement? _element)
-		{
-            var _allNews = new List<News>();
-            var OneList = _element.QuerySelectorAll(".listphoto");
-            Parallel.ForEach(OneList, async (news) =>
-            {
-                var _news = new News()
-                {
-                    Title = news.GetAttribute("title") ?? string.Empty,
-                    Url = news.GetAttribute("href") ?? string.Empty,
-                    UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
-                    PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml),
-                    Source = "自由時報"
-                };
-                await GetNewsStrategyBodyHtml(_news);
-                if (!string.IsNullOrEmpty(_news.ContentBodyHtml))
-                    _allNews.Add(_news);
-            });
-
-            var TwoList = _element.QuerySelectorAll("ul[data-desc=列表] li");
-            Parallel.ForEach(TwoList, async (news) =>
-            {
-                var _news = new News()
-                {
-                    Title = news.QuerySelector("a").GetAttribute("title") ?? string.Empty,
-                    Url = news.QuerySelector("a").GetAttribute("href") ?? string.Empty,
-                    UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
-                    PublishedAt = Convert.ToDateTime(news.QuerySelector(".newstime").InnerHtml),
-                    Source = "自由時報"
-                };
-                await GetNewsStrategyBodyHtml(_news);
-                if (!string.IsNullOrEmpty(_news.ContentBodyHtml))
-                    _allNews.Add(_news);
-            });
-
-            return _allNews;
-        }
-
-        private async Task GetNewsStrategyBodyHtml(News _news)
+        public async Task<List<News>> GetNews(NewsltnNewsType type)
         {
-            var OneNewsHtml = await GetHttpClient.GetHtml(_news.Url);
-            if (!string.IsNullOrEmpty(OneNewsHtml))
+            string url = type == NewsltnNewsType.strategy
+                ? $"{DefulStrategyUrl}list/strategy"
+                : $"{DefulUrl}list/breakingnews/{type}";
+
+            string html = await GetHttpClient.GetHtml(url);
+            var allNews = new List<News>();
+
+            if (string.IsNullOrEmpty(html)) return allNews;
+
+            var parser = new HtmlParser(html);
+
+            if (type == NewsltnNewsType.strategy)
             {
-                var Bodydocument = await _context.OpenAsync(res => res.Content(OneNewsHtml));
-                var centralContent = Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text");
-                #region 刪除無用區塊
-
-                var R2= centralContent.QuerySelector(".before_ir");
-                var R3= centralContent.QuerySelector(".after_ir");
-                var R4= centralContent.QuerySelector(".appE1121");
-                var R5= centralContent.QuerySelector("[id=oneadIRMIRTag]");
-                var R6= centralContent.QuerySelector("[id=ad-IR1]");
-                var R7= centralContent.QuerySelector("[id=ad-IR2]");
-                var R8= centralContent.QuerySelectorAll("script");
-                var R9= centralContent.QuerySelector(".suggest");
-
-         
-                if (R2 is not null)
-                    centralContent.RemoveElement(R2);
-                if (R3 is not null)
-                    centralContent.RemoveElement(R3);
-                if (R4 is not null)
-                    centralContent.RemoveElement(R4);
-                if (R5 is not null)
-                    centralContent.RemoveElement(R5);
-                if (R6 is not null)
-                    centralContent.RemoveElement(R6);
-                if (R7 is not null)
-                    centralContent.RemoveElement(R7);
-                if (R8 is not null)
+                var strategyList = parser.QuerySelector("div.whitecon.boxTitle.boxText[data-desc=列表]");
+                if (strategyList != null)
                 {
-                    foreach (var c in R8)
-                    {
-                        try { centralContent?.RemoveElement(c); }
-                        catch { }
-                    }
+                    allNews.AddRange(await GetStrategyNews(strategyList));
                 }
-                if (R9 is not null)
-                    centralContent.RemoveElement(R9);
-                #endregion
-                _news.ContentBodyHtml = centralContent.InnerHtml.Trim();
-                _news.ContentBody = Bodydocument.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text").TextContent.Trim();
-                _news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty;
-                _news.Author = Bodydocument.QuerySelector("head meta[name=author]").GetAttribute("content") ?? string.Empty;
             }
+            else
+            {
+                var newsList = parser.QuerySelector("ul.list");
+                if (newsList != null)
+                {
+                    allNews.AddRange(await GetRegularNews(newsList));
+                }
+            }
+
+            return allNews;
         }
 
-
-        private async Task<List<News>> GetHtmlNewsObject(IElement? _element)
+        private async Task<List<News>> GetStrategyNews(HtmlElement element)
         {
-            var _allNews = new List<News>();
-            var NewsList = _element.QuerySelectorAll("li");
-            Parallel.ForEach(NewsList, async (news) =>
+            var allNews = new List<News>();
+
+            // 處理照片新聞
+            var photoNews = element.QuerySelectorAll(".listphoto");
+            var photoTasks = photoNews.Select(async news =>
             {
-                var _news = new News()
+                try
                 {
-                    Title = news.QuerySelector(".title")?.TextContent.Trim(),
-                    Url = news.QuerySelector("a")?.GetAttribute("href") ?? string.Empty,
-                    UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
-                    Source = "自由時報"
-                };
-                await GetNewsBodyHtml(_news);
-                if (!string.IsNullOrEmpty(_news.ContentBodyHtml))
-                    _allNews.Add(_news);
-            });    
-            return _allNews;
-        }
-
-        private async Task GetNewsBodyHtml(News _news)
-        {
-            var OneNewsHtml = await GetHttpClient.GetHtml(_news.Url);
-            if (!string.IsNullOrEmpty(OneNewsHtml))
-            {
-                var Bodydocument = await _context.OpenAsync(res => res.Content(OneNewsHtml));
-                var centralContent = Bodydocument.QuerySelector(".text.boxTitle.boxText");
-                _news.PublishedAt = Convert.ToDateTime(centralContent.QuerySelector(".time")?.TextContent ?? string.Empty);
-
-                #region 刪除無用區塊
-
-                var R1 = centralContent.QuerySelector(".photo");
-                var R2 = centralContent.QuerySelector(".time");
-                var R3 = centralContent.QuerySelector(".before_ir");
-                var R4 = centralContent.QuerySelector("[id=oneadIRMIRTag]");
-                var R5 = centralContent.QuerySelector("[id=ad-IR1]");
-                var R6 = centralContent.QuerySelectorAll("script");
-                var R7 = centralContent.QuerySelector(".suggest");
-                var R8 = centralContent.QuerySelector(".appE1121");
-            
-                if (R1 is not null)
-                    centralContent?.RemoveElement(R1);
-                if (R2 is not null)
-                    centralContent?.RemoveElement(R2);
-                if (R3 is not null)
-                    centralContent?.RemoveElement(R3);
-                if (R4 is not null)
-                    centralContent?.RemoveElement(R4);
-                if (R5 is not null)
-                    centralContent?.RemoveElement(R5);
-                if (R6 is not null)
-                {
-                    foreach(var c in R6)
+                    var newsItem = new News
                     {
-                        try{centralContent?.RemoveElement(c);}
-                        catch{}
+                        Title = news.GetAttribute("title") ?? string.Empty,
+                        Url = news.GetAttribute("href") ?? string.Empty,
+                        UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
+                        Source = "自由時報"
+                    };
+
+                    var timeElement = news.QuerySelector(".newstime");
+                    if (timeElement != null)
+                    {
+                        newsItem.PublishedAt = DateTime.Parse(timeElement.InnerHtml);
                     }
-                }                   
-                if (R7 is not null)
-                    centralContent?.RemoveElement(R7);
-                if (R8 is not null)
-                    centralContent?.RemoveElement(R8);
 
-                #endregion
+                    await FetchStrategyNewsContent(newsItem);
+                    return newsItem;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing photo news: {ex.Message}");
+                    return null;
+                }
+            });
 
-                _news.ContentBodyHtml = centralContent.InnerHtml.Trim();
-                _news.ContentBody = centralContent.TextContent.Trim();
-                _news.Description = Bodydocument.QuerySelector("head meta[name=description]").GetAttribute("content") ?? string.Empty;
-                _news.Author = Bodydocument.QuerySelector("head meta[name=author]").GetAttribute("content") ?? string.Empty;
-            }
+            // 處理列表新聞
+            var listItems = element.QuerySelectorAll("ul[data-desc=列表] li");
+            var listTasks = listItems.Select(async news =>
+            {
+                try
+                {
+                    var link = news.QuerySelector("a");
+                    if (link == null) return null;
+
+                    var newsItem = new News
+                    {
+                        Title = link.GetAttribute("title") ?? string.Empty,
+                        Url = link.GetAttribute("href") ?? string.Empty,
+                        UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
+                        Source = "自由時報"
+                    };
+
+                    var timeElement = news.QuerySelector(".newstime");
+                    if (timeElement != null)
+                    {
+                        newsItem.PublishedAt = DateTime.Parse(timeElement.InnerHtml);
+                    }
+
+                    await FetchStrategyNewsContent(newsItem);
+                    return newsItem;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing list news: {ex.Message}");
+                    return null;
+                }
+            });
+
+            var allTasks = photoTasks.Concat(listTasks);
+            var results = await Task.WhenAll(allTasks);
+            allNews.AddRange(results.Where(n => n != null && !string.IsNullOrEmpty(n.ContentBodyHtml))!);
+
+            return allNews;
         }
 
+        private async Task<List<News>> GetRegularNews(HtmlElement element)
+        {
+            var allNews = new List<News>();
+            var newsItems = element.QuerySelectorAll("li");
 
+            var tasks = newsItems.Select(async news =>
+            {
+                try
+                {
+                    var newsItem = new News
+                    {
+                        Title = news.QuerySelector(".title")?.TextContent.Trim() ?? string.Empty,
+                        Url = news.QuerySelector("a")?.GetAttribute("href") ?? string.Empty,
+                        UrlToImage = news.QuerySelector("img")?.GetAttribute("data-src") ?? string.Empty,
+                        Source = "自由時報"
+                    };
 
+                    await FetchRegularNewsContent(newsItem);
+                    return newsItem;
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error processing regular news: {ex.Message}");
+                    return null;
+                }
+            });
 
+            var results = await Task.WhenAll(tasks);
+            allNews.AddRange(results.Where(n => n != null && !string.IsNullOrEmpty(n.ContentBodyHtml))!);
+
+            return allNews;
+        }
+
+        private async Task FetchStrategyNewsContent(News news)
+        {
+            var html = await GetHttpClient.GetHtml(news.Url);
+            if (string.IsNullOrEmpty(html)) return;
+
+            var parser = new HtmlParser(html);
+            var contentElement = parser.QuerySelector(".whitecon.boxTitle.boxText[data-desc=內文] .text");
+            if (contentElement == null) return;
+
+            // 移除不需要的內容
+            var elementsToRemove = new[]
+            {
+                contentElement.QuerySelector(".before_ir"),
+                contentElement.QuerySelector(".after_ir"),
+                contentElement.QuerySelector(".appE1121"),
+                contentElement.QuerySelector("[id=oneadIRMIRTag]"),
+                contentElement.QuerySelector("[id=ad-IR1]"),
+                contentElement.QuerySelector("[id=ad-IR2]"),
+                contentElement.QuerySelector(".suggest")
+            };
+
+            var contentHtml = contentElement.InnerHtml;
+            foreach (var element in elementsToRemove.Where(e => e != null))
+            {
+                contentHtml = RemoveElement(contentHtml, element.InnerHtml);
+            }
+
+            // 移除腳本標籤
+            var scriptElements = contentElement.QuerySelectorAll("script");
+            foreach (var script in scriptElements)
+            {
+                contentHtml = RemoveElement(contentHtml, script.InnerHtml);
+            }
+
+            news.ContentBodyHtml = contentHtml.Trim();
+            news.ContentBody = StripHtml(contentHtml).Trim();
+            news.Description = parser.QuerySelector("head meta[name=description]")?.GetAttribute("content") ?? string.Empty;
+            news.Author = parser.QuerySelector("head meta[name=author]")?.GetAttribute("content") ?? string.Empty;
+        }
+
+        private async Task FetchRegularNewsContent(News news)
+        {
+            var html = await GetHttpClient.GetHtml(news.Url);
+            if (string.IsNullOrEmpty(html)) return;
+
+            var parser = new HtmlParser(html);
+            var contentElement = parser.QuerySelector(".text.boxTitle.boxText");
+            if (contentElement == null) return;
+
+            var timeElement = contentElement.QuerySelector(".time");
+            if (timeElement != null)
+            {
+                news.PublishedAt = DateTime.Parse(timeElement.TextContent);
+            }
+
+            // 移除不需要的內容
+            var elementsToRemove = new[]
+            {
+                contentElement.QuerySelector(".photo"),
+                contentElement.QuerySelector(".time"),
+                contentElement.QuerySelector(".before_ir"),
+                contentElement.QuerySelector("[id=oneadIRMIRTag]"),
+                contentElement.QuerySelector("[id=ad-IR1]"),
+                contentElement.QuerySelector(".suggest"),
+                contentElement.QuerySelector(".appE1121")
+            };
+
+            var contentHtml = contentElement.InnerHtml;
+            foreach (var element in elementsToRemove.Where(e => e != null))
+            {
+                contentHtml = RemoveElement(contentHtml, element.InnerHtml);
+            }
+
+            // 移除腳本標籤
+            var scriptElements = contentElement.QuerySelectorAll("script");
+            foreach (var script in scriptElements)
+            {
+                contentHtml = RemoveElement(contentHtml, script.InnerHtml);
+            }
+
+            news.ContentBodyHtml = contentHtml.Trim();
+            news.ContentBody = StripHtml(contentHtml).Trim();
+            news.Description = parser.QuerySelector("head meta[name=description]")?.GetAttribute("content") ?? string.Empty;
+            news.Author = parser.QuerySelector("head meta[name=author]")?.GetAttribute("content") ?? string.Empty;
+        }
+
+        private string RemoveElement(string html, string elementHtml)
+        {
+            return html.Replace(elementHtml, string.Empty);
+        }
+
+        private string StripHtml(string input)
+        {
+            return System.Text.RegularExpressions.Regex.Replace(input, "<.*?>", string.Empty);
+        }
     }
 
     public enum NewsltnNewsType
@@ -250,5 +282,4 @@ namespace Taiwan_news_crawlers
         /// </summary>
         strategy,
     }
-
 }

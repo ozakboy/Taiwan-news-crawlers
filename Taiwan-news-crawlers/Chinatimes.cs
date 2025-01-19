@@ -1,58 +1,85 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using AngleSharp;
-
+﻿using System.Text.RegularExpressions;
 
 namespace Taiwan_news_crawlers
 {
-	/// <summary>
-	/// 中時新聞網
-	/// </summary>
-	public class Chinatimes
-	{
-		private static readonly string DefultUrl = "https://www.chinatimes.com";
-		public async Task<List<News>> GetNews(ChinatimesNewsType newsType)
-		{
-			string Url = $"https://www.chinatimes.com/realtimenews/{newsType.GetHashCode()}/?chdtv";
-			string Html = await GetHttpClient.GetHtml(Url);
-			var _allnews = new List<News>();
-			if (!string.IsNullOrEmpty(Html))
-            {
-                var config = Configuration.Default;
-                var context = BrowsingContext.New(config);
-                var document = context.OpenAsync(res => res.Content(Html)).Result;
-                var NewsList = document.QuerySelectorAll("section.article-list ul li div.articlebox-compact").Select(x => x.FirstElementChild);
-               
-                Parallel.ForEach(NewsList, async (news) =>
-                {
-                    var _news = new News()
-                    {
-                        Title = news.QuerySelector(".title").TextContent.Trim(),
-                        Url = DefultUrl + news.QuerySelector("a")?.GetAttribute("href") ?? string.Empty,
-                        UrlToImage = news.QuerySelector("div a img")?.GetAttribute("src") ?? string.Empty,
-                        PublishedAt = Convert.ToDateTime(news.QuerySelector("time")?.GetAttribute("datetime") ?? string.Empty),
-                        Description = news.QuerySelector("p.intro").TextContent.Trim(),
-                        Source = "中時新聞網"
-                    };
-                    var OneNewsHtml = await GetHttpClient.GetHtml(_news.Url);
-                    if (!string.IsNullOrEmpty(OneNewsHtml))
-                    {
-                        var Bodydocument = context.OpenAsync(res => res.Content(OneNewsHtml)).Result;
-                        _news.Author = Bodydocument.QuerySelector(".meta-info .author").TextContent.Trim();
-                        _news.ContentBody = Bodydocument.QuerySelector("div.article-body").TextContent.Trim();
-                        _news.ContentBodyHtml = Bodydocument.QuerySelector("div.article-body").InnerHtml.Trim();
-                        _allnews.Add(_news);
-                    }
-                });
-            }
-			return _allnews;
-		}
+    /// <summary>
+    /// 中時新聞網
+    /// </summary>
+    public class Chinatimes
+    {
+        private static readonly string DefultUrl = "https://www.chinatimes.com";
 
-		
-	}
+        public async Task<List<News>> GetNews(ChinatimesNewsType newsType)
+        {
+            string url = $"https://www.chinatimes.com/realtimenews/{newsType.GetHashCode()}/?chdtv";
+            string html = await GetHttpClient.GetHtml(url);
+            var allNews = new List<News>();
+
+            if (!string.IsNullOrEmpty(html))
+            {
+                var parser = new HtmlParser(html);
+                var newsListElements = parser.QuerySelectorAll("div.articlebox-compact");
+
+                var tasks = newsListElements.Select(async element => {
+                    try
+                    {
+                        var titleElement = element.QuerySelector(".title");
+                        if (titleElement == null) return null;
+
+                        var linkElement = element.QuerySelector("a");
+                        var imageElement = element.QuerySelector("img");
+                        var timeElement = element.QuerySelector("time");
+                        var introElement = element.QuerySelector("p.intro");
+
+                        var news = new News
+                        {
+                            Title = titleElement.TextContent.Trim(),
+                            Url = DefultUrl + (linkElement?.GetAttribute("href") ?? string.Empty),
+                            UrlToImage = imageElement?.GetAttribute("src") ?? string.Empty,
+                            Description = introElement?.TextContent.Trim() ?? string.Empty,
+                            Source = "中時新聞網"
+                        };
+
+                        if (timeElement?.GetAttribute("datetime") is string dateStr)
+                        {
+                            if (DateTime.TryParse(dateStr, out var date))
+                            {
+                                news.PublishedAt = date;
+                            }
+                        }
+
+                        // 獲取新聞內文
+                        var articleHtml = await GetHttpClient.GetHtml(news.Url);
+                        if (!string.IsNullOrEmpty(articleHtml))
+                        {
+                            var articleParser = new HtmlParser(articleHtml);
+                            var authorElement = articleParser.QuerySelector(".meta-info .author");
+                            var contentElement = articleParser.QuerySelector("div.article-body");
+
+                            if (contentElement != null)
+                            {
+                                news.Author = authorElement?.TextContent.Trim() ?? string.Empty;
+                                news.ContentBody = contentElement.TextContent.Trim();
+                                news.ContentBodyHtml = contentElement.InnerHtml.Trim();
+                                return news;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error if needed
+                        Console.WriteLine($"Error processing news: {ex.Message}");
+                    }
+                    return null;
+                }).ToList();
+
+                var results = await Task.WhenAll(tasks);
+                allNews.AddRange(results.Where(n => n != null)!);
+            }
+
+            return allNews;
+        }
+    }
 
     public enum ChinatimesNewsType
     {

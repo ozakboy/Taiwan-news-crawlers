@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
 namespace Taiwan_news_crawlers
@@ -12,167 +13,146 @@ namespace Taiwan_news_crawlers
 	/// </summary>
 	public class Cnyes
 	{
-		public static readonly string CnyesUrl = "https://news.cnyes.com/";
-		public static readonly string CnyesApiUrl = "https://api.cnyes.com/";
+        public static readonly string CnyesUrl = "https://news.cnyes.com/";
+        public static readonly string CnyesApiUrl = "https://api.cnyes.com/";
 
-		public async Task<List<News>> GetNews(CnyesNewsType _cnyesNewsType)
-		{
-			List<News> list = new List<News>();
+        public async Task<List<News>> GetNews(CnyesNewsType newsType)
+        {
+            var startTime = GetUnixTimestamp(DateTime.Now.AddDays(-3));
+            var endTime = GetUnixTimestamp(DateTime.Now);
+            var apiUrl = $"{CnyesApiUrl}media/api/v1/newslist/category/{newsType}?startAt={startTime}&endAt={endTime}&limit=30";
 
-            var StartNow = GetIntTIme(DateTime.Now.AddDays(-3));
-			var EndNow = GetIntTIme(DateTime.Now);
+            var apiResponse = await GetHttpClient.GetApiJson<ApiResponse>(apiUrl);
+            var newsList = new List<News>();
 
-			var ApiUrl = $"{CnyesApiUrl}media/api/v1/newslist/category/{_cnyesNewsType}?startAt={StartNow}&endAt={EndNow}&limit=30";
+            if (apiResponse?.Items?.Data == null) return newsList;
 
-            var CnyesApiRep = await GetHttpClient.GetApiJson<VCnyesApiRep>(ApiUrl);
-			if (CnyesApiRep is null)
-				return list;
-            else if (CnyesApiRep.items is null)
-                return list;
-            else if (CnyesApiRep.items.data is null)
-				return list;
-
-            foreach (var OneNews in CnyesApiRep.items.data)
-			{
-				var CreateNews = new News()
-				{
-					Title = OneNews.title,
-					Description = OneNews.summary,
-					Author = OneNews.source ?? string.Empty,
-					ContentBody = OneNews.content,
-					ContentBodyHtml = OneNews.content,
-					PublishedAt = IntTimeToDateTIme(OneNews.publishAt) ,
-					Url = $"{CnyesUrl}news/id/{OneNews.newsId}",
-					UrlToImage = OneNews.coverSrc?.l.src ?? string.Empty,
+            foreach (var item in apiResponse.Items.Data)
+            {
+                var news = new News
+                {
+                    Title = item.Title,
+                    Description = item.Summary,
+                    Author = item.Source ?? string.Empty,
+                    ContentBody = item.Content,
+                    ContentBodyHtml = item.Content,
+                    PublishedAt = UnixTimestampToDateTime(item.PublishAt),
+                    Url = $"{CnyesUrl}news/id/{item.NewsId}",
+                    UrlToImage = item.CoverSrc?.Large.Src ?? string.Empty,
                     Source = "鉅亨網"
                 };
-				list.Add(CreateNews);
-			}
+                newsList.Add(news);
+            }
 
-			return list;
-
-
+            return newsList;
         }
 
-	
-
-        #region 轉時間格式
-
-        /// <summary>
-        ///  取得鉅亨時間格式
-        /// </summary>
-        /// <param name="_dateTime"></param>
-        /// <returns></returns>
-        private long GetIntTIme(DateTime _dateTime)
+        private static long GetUnixTimestamp(DateTime dateTime)
         {
-
-			// 將 datetime 轉換成 UTC 時間
-            DateTime utcDatetime = _dateTime.ToUniversalTime();
-
-            // 計算 UTC datetime 距離 1970 年 1 月 1 日 00:00:00 UTC 的秒數
-            long unixTimestamp = (long)(utcDatetime.Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc))).TotalSeconds;
-			return unixTimestamp;
-
+            return ((DateTimeOffset)dateTime.ToUniversalTime()).ToUnixTimeSeconds();
         }
 
-		/// <summary>
-		/// 把數字時間格式轉回時間型態
-		/// </summary>
-		/// <param name="IntTIme"></param>
-		/// <returns></returns>
-		private DateTime IntTimeToDateTIme(long IntTIme)
-		{
-            return new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(IntTIme);
+        private static DateTime UnixTimestampToDateTime(long unixTimestamp)
+        {
+            return DateTimeOffset.FromUnixTimeSeconds(unixTimestamp).DateTime;
         }
 
-        #endregion
+        #region API Response Classes
+        private class ApiResponse
+        {
+            [JsonPropertyName("items")]
+            public ApiItems Items { get; set; }
 
-        #region  
+            [JsonPropertyName("message")]
+            public string Message { get; set; }
 
-        private class VCnyesApiRep
-		{	
-			public VCnyesApiData items { get; set; }
-
-			public string message { get; set; }
-			public int statusCode { get; set; }
-
-
-
+            [JsonPropertyName("statusCode")]
+            public int StatusCode { get; set; }
         }
 
-		private class VCnyesApiData
-		{
-            public int current_page { get; set; }
-            public int from { get; set; }
-            public int last_page { get; set; }
-            public int per_page { get; set; }
-            public int to { get; set; }
-            public int total { get; set; }
-            /// <summary>
-            /// 新聞資料
-            /// </summary>
-            public List<VCnyesNews> data { get; set; }
+        private class ApiItems
+        {
+            [JsonPropertyName("current_page")]
+            public int CurrentPage { get; set; }
+
+            [JsonPropertyName("from")]
+            public int From { get; set; }
+
+            [JsonPropertyName("last_page")]
+            public int LastPage { get; set; }
+
+            [JsonPropertyName("per_page")]
+            public int PerPage { get; set; }
+
+            [JsonPropertyName("to")]
+            public int To { get; set; }
+
+            [JsonPropertyName("total")]
+            public int Total { get; set; }
+
+            [JsonPropertyName("data")]
+            public List<NewsItem> Data { get; set; }
         }
 
+        private class NewsItem
+        {
+            [JsonPropertyName("content")]
+            public string Content { get; set; }
 
+            [JsonPropertyName("summary")]
+            public string Summary { get; set; }
 
-        private class VCnyesNews
-		{
+            [JsonPropertyName("title")]
+            public string Title { get; set; }
 
-			/// <summary>
-			/// 內文
-			/// </summary>
-			public string content { get; set; }
-            /// <summary>
-            /// 概括
-            /// </summary>
-            public string summary { get; set; }
-			/// <summary>
-			/// 標題
-			/// </summary>
-			public string title { get; set; }
-			/// <summary>
-			///  圖片連結
-			/// </summary>
-			public VCnyesNewsCoverSrc? coverSrc { get; set; }
-			/// <summary>
-			/// 分類
-			/// </summary>
-			public string categoryName { get; set; }
+            [JsonPropertyName("coverSrc")]
+            public CoverSource CoverSrc { get; set; }
 
-			/// <summary>
-			/// 發布時間
-			/// </summary>
-			public long publishAt { get; set; }
+            [JsonPropertyName("categoryName")]
+            public string CategoryName { get; set; }
 
-			/// <summary>
-			/// 新聞ID
-			/// </summary>
-			public long newsId { get; set; }
+            [JsonPropertyName("publishAt")]
+            public long PublishAt { get; set; }
 
-			public string source { get; set; }
+            [JsonPropertyName("newsId")]
+            public long NewsId { get; set; }
 
+            [JsonPropertyName("source")]
+            public string Source { get; set; }
         }
 
-		private class VCnyesNewsCoverSrc
-		{
+        private class CoverSource
+        {
+            [JsonPropertyName("xs")]
+            public ImageInfo ExtraSmall { get; set; }
 
-			public VCnyesImg xs { get; set; }
-			public VCnyesImg s { get; set; }
-			public VCnyesImg m { get; set; }
-			public VCnyesImg l { get; set; }
-			public VCnyesImg xl { get; set; }
-			public VCnyesImg xxl { get; set; }
+            [JsonPropertyName("s")]
+            public ImageInfo Small { get; set; }
+
+            [JsonPropertyName("m")]
+            public ImageInfo Medium { get; set; }
+
+            [JsonPropertyName("l")]
+            public ImageInfo Large { get; set; }
+
+            [JsonPropertyName("xl")]
+            public ImageInfo ExtraLarge { get; set; }
+
+            [JsonPropertyName("xxl")]
+            public ImageInfo ExtraExtraLarge { get; set; }
         }
 
-		public class VCnyesImg
-		{
-			public string src { get; set; }
-			public int width { get; set; }
-			public int height { get; set; }
+        private class ImageInfo
+        {
+            [JsonPropertyName("src")]
+            public string Src { get; set; }
 
+            [JsonPropertyName("width")]
+            public int Width { get; set; }
+
+            [JsonPropertyName("height")]
+            public int Height { get; set; }
         }
-
         #endregion
     }
 
