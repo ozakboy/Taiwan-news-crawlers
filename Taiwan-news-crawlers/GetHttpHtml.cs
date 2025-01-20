@@ -5,44 +5,46 @@ namespace Taiwan_news_crawlers
 {
     public static class GetHttpClient
     {
-        private static readonly HttpClient _httpClient = new()
-        {
-            Timeout = TimeSpan.FromSeconds(30)
-        };
-
-        static GetHttpClient()
-        {
-            // 設置默認請求頭，模擬瀏覽器行為
-            _httpClient.DefaultRequestHeaders.Add("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36");
-            _httpClient.DefaultRequestHeaders.Add("Accept", "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8");
-            _httpClient.DefaultRequestHeaders.Add("Accept-Language", "zh-TW,zh;q=0.9,en-US;q=0.8,en;q=0.7");
-        }
+        private static readonly ProxyService _proxyService = new();
 
         /// <summary>
         /// 取得網頁內容
         /// </summary>
-        public static async Task<string> GetHtml(string url)
+        public static async Task<string> GetHtml(string url, int maxRetries = 3)
         {
-            try
+            for (int i = 0; i < maxRetries; i++)
             {
-                using var response = await _httpClient.GetAsync(url);
-                if (response.IsSuccessStatusCode)
+                using var client = _proxyService.GetHttpClient();
+                try
                 {
-                    // 檢測編碼
-                    var contentType = response.Content.Headers.ContentType?.CharSet;
-                    var encoding = !string.IsNullOrEmpty(contentType)
-                        ? Encoding.GetEncoding(contentType)
-                        : Encoding.UTF8;
+                    await DelayRequest();
+                    using var response = await client.GetAsync(url);
+                    if (response.IsSuccessStatusCode)
+                    {
+                        // 檢測編碼
+                        var contentType = response.Content.Headers.ContentType?.CharSet;
+                        var encoding = !string.IsNullOrEmpty(contentType)
+                            ? Encoding.GetEncoding(contentType)
+                            : Encoding.UTF8;
 
-                    var bytes = await response.Content.ReadAsByteArrayAsync();
-                    return encoding.GetString(bytes);
+                        var bytes = await response.Content.ReadAsByteArrayAsync();
+                        return encoding.GetString(bytes);
+                    }
+
+                    if ((int)response.StatusCode == 403)
+                    {
+                        await Task.Delay(5000 * (i + 1)); // 逐次增加等待時間
+                        continue;
+                    }
                 }
-                return string.Empty;
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Error on try {i + 1}: {ex.Message}");
+                    if (i == maxRetries - 1) return string.Empty;
+                    await Task.Delay(2000 * (i + 1));
+                }
             }
-            catch
-            {
-                return string.Empty;
-            }
+            return string.Empty;
         }
 
         /// <summary>
@@ -50,9 +52,10 @@ namespace Taiwan_news_crawlers
         /// </summary>
         public static async Task<T?> GetApiJson<T>(string url) where T : class
         {
+            using var client = _proxyService.GetHttpClient();
             try
             {
-                using var response = await _httpClient.GetAsync(url);
+                using var response = await client.GetAsync(url);
                 if (response.IsSuccessStatusCode)
                 {
                     var jsonString = await response.Content.ReadAsStringAsync();
@@ -69,6 +72,13 @@ namespace Taiwan_news_crawlers
             {
                 return null;
             }
+        }
+
+        private static async Task DelayRequest()
+        {
+            Random rand = new Random();
+            int delay = rand.Next(1000, 10000); // 1-10秒隨機延遲
+            await Task.Delay(delay);
         }
     }
 }
